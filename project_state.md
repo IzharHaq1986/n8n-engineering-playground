@@ -6,11 +6,15 @@
 
 **Project Name:** n8n
 
-**Purpose**
+#### Purpose
 
-Build production-quality automation workflows using n8n to strengthen my existing engineering niche in embedded systems, cloud, DevOps, AI automation, networking, and Building Automation Systems (BAS).
+Build production-quality automation workflows using n8n to strengthen my
+existing engineering niche in embedded systems, cloud, DevOps, AI automation,
+networking, and Building Automation Systems (BAS).
 
-The long-term objective is to create reusable, portfolio-quality projects that demonstrate practical engineering skills suitable for freelance work and professional consulting.
+The long-term objective is to create reusable, portfolio-quality projects that
+demonstrate practical engineering skills suitable for freelance work and
+professional consulting.
 
 ---
 
@@ -30,7 +34,7 @@ The long-term objective is to create reusable, portfolio-quality projects that d
 
 #### Phase 1 — n8n Fundamentals
 
-**Objectives**
+##### Objectives
 
 * Install n8n locally using Docker.
 * Understand the user interface.
@@ -45,7 +49,7 @@ The long-term objective is to create reusable, portfolio-quality projects that d
 
 #### Phase 2 — Integrations
 
-**Objectives**
+##### Objectives
 
 * REST APIs
 * HTTP Request node
@@ -62,7 +66,7 @@ The long-term objective is to create reusable, portfolio-quality projects that d
 
 #### Phase 3 — AI
 
-**Objectives**
+##### Objectives
 
 * OpenAI integration
 * Anthropic integration
@@ -75,7 +79,7 @@ The long-term objective is to create reusable, portfolio-quality projects that d
 
 #### Phase 4 — Production
 
-**Objectives**
+##### Objectives
 
 * Docker Compose
 * Reverse proxy
@@ -90,7 +94,7 @@ The long-term objective is to create reusable, portfolio-quality projects that d
 
 #### Phase 5 — Advanced
 
-**Objectives**
+##### Objectives
 
 * Custom JavaScript
 * Python integrations
@@ -103,7 +107,7 @@ The long-term objective is to create reusable, portfolio-quality projects that d
 
 ### IV. Current Phase
 
-**Phase 1 — n8n Fundamentals**
+#### Phase 1 — n8n Fundamentals
 
 **Status:** Not Started
 
@@ -130,4 +134,6 @@ Begin Phase 1 by installing and running n8n locally using Docker.
 
 ### VIII. Notes
 
-This document serves as the project's single source of truth. It should be updated as each milestone is completed so the project can be resumed easily in future conversations.
+This document serves as the project's single source of truth. It should be
+updated as each milestone is completed so the project can be resumed easily in
+future conversations.
