@@ -98,4 +98,3 @@ Design systems assuming trustworthy AI agents will increasingly become system us
 - [ ] Required context has been identified
 - [ ] Complex work is separated into planning, implementation, testing, and review
 - [ ] AI output is treated as a draft and independently validated before acceptance
-
