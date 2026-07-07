@@ -11,17 +11,52 @@
         0,
         0
       ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "status-assignment",
+              "name": "status",
+              "value": "ok",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        208,
+        0
+      ],
+      "id": "edit-fields",
+      "name": "Edit Fields"
     }
   ],
   "pinData": {},
-  "connections": {},
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
   "active": false,
   "settings": {
     "executionOrder": "v1",
     "binaryMode": "separate",
     "availableInMCP": false
   },
-  "versionId": "phase1-manual-health-check-v1",
+  "versionId": "phase1-manual-health-check-v2",
   "nodeGroups": [],
   "tags": []
 }
