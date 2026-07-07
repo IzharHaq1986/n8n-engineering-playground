@@ -57,7 +57,7 @@ Briefly describe the change.
 - [ ] High-risk actions require explicit human approval
 - [ ] Change aligns with architecture, coding standards, and long-term maintainability
 
-**Engineering Principle**
+#### Engineering Principle
 
 Treat AI as an engineering assistant, not the final decision-maker.
 
@@ -74,7 +74,7 @@ Engineers remain responsible for the system's safety, reliability, security, and
 - [ ] Systems remain deterministic, observable, and recoverable
 - [ ] Components remain modular and avoid unnecessary vendor lock-in
 
-**Engineering Principle**
+#### Engineering Principle
 
 Design systems assuming trustworthy AI agents will increasingly become system users.
 
