@@ -119,7 +119,7 @@ Phase 1 Slice 1 completed: added workflows/phase1/manual-health-check.json via P
 
 Phase 1 Slice 2 completed: added docker/docker-compose.yml via PR #5 using squash merge. Docker Compose validation passed. Python validation was not applicable because no Python source files were changed.
 
-Phase 1 Slice 3 completed: started local n8n, verified http://localhost:5678, completed owner setup, imported and executed workflows/phase1/manual-health-check.json, and normalized the exported workflow through PR #7.
+Phase 1 Slice 3 completed: started local n8n, verified `http://localhost:5678`, completed owner setup, imported and executed workflows/phase1/manual-health-check.json, and normalized the exported workflow through PR #7.
 
 ---
 
