@@ -4,6 +4,17 @@ services:
     container_name: n8n-engineering-playground
     ports:
       - "5678:5678"
+    restart: unless-stopped
+
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - wget --quiet --spider http://localhost:5678/rest/settings || exit 1
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 60s
+
     environment:
       - N8N_HOST=localhost
       - N8N_PORT=5678
