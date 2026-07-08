@@ -138,6 +138,12 @@
               "name": "workflow",
               "value": "manual-health-check",
               "type": "string"
+            },
+            {
+              "id": "workflow-version-assignment-phase1-build-success-response",
+              "name": "workflowVersion",
+              "value": "phase1-v1",
+              "type": "string"
             }
           ]
         },
@@ -161,6 +167,12 @@
               "id": "workflow-assignment-phase1-build-failure-response",
               "name": "workflow",
               "value": "manual-health-check",
+              "type": "string"
+            },
+            {
+              "id": "workflow-version-assignment-phase1-build-failure-response",
+              "name": "workflowVersion",
+              "value": "phase1-v1",
               "type": "string"
             }
           ]
