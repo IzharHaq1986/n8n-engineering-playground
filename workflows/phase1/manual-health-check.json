@@ -80,6 +80,54 @@
       ],
       "id": "phase1-if-status-ok",
       "name": "If"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "health-check-result-passed-assignment",
+              "name": "healthCheckResult",
+              "value": "passed",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        240,
+        -144
+      ],
+      "id": "phase1-mark-healthy",
+      "name": "Mark Healthy"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "health-check-result-failed-assignment",
+              "name": "healthCheckResult",
+              "value": "failed",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        240,
+        48
+      ],
+      "id": "phase1-mark-unhealthy",
+      "name": "Mark Unhealthy"
     }
   ],
   "pinData": {},
@@ -111,6 +159,24 @@
         [
           {
             "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Mark Healthy",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Mark Unhealthy",
             "type": "main",
             "index": 0
           }
