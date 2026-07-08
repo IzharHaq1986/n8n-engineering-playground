@@ -128,6 +128,54 @@
       ],
       "id": "phase1-mark-unhealthy",
       "name": "Mark Unhealthy"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "workflow-assignment-phase1-build-success-response",
+              "name": "workflow",
+              "value": "manual-health-check",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        448,
+        -144
+      ],
+      "id": "phase1-build-success-response",
+      "name": "Build Success Response"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "workflow-assignment-phase1-build-failure-response",
+              "name": "workflow",
+              "value": "manual-health-check",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        448,
+        48
+      ],
+      "id": "phase1-build-failure-response",
+      "name": "Build Failure Response"
     }
   ],
   "pinData": {},
@@ -177,6 +225,28 @@
         [
           {
             "node": "Mark Unhealthy",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mark Healthy": {
+      "main": [
+        [
+          {
+            "node": "Build Success Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mark Unhealthy": {
+      "main": [
+        [
+          {
+            "node": "Build Failure Response",
             "type": "main",
             "index": 0
           }
