@@ -150,6 +150,12 @@
               "name": "responseSchemaVersion",
               "value": "health-check-response-v1",
               "type": "string"
+            },
+            {
+              "id": "execution-source-assignment-phase1-build-success-response",
+              "name": "executionSource",
+              "value": "manual-trigger",
+              "type": "string"
             }
           ]
         },
@@ -185,6 +191,12 @@
               "id": "response-schema-version-assignment-phase1-build-failure-response",
               "name": "responseSchemaVersion",
               "value": "health-check-response-v1",
+              "type": "string"
+            },
+            {
+              "id": "execution-source-assignment-phase1-build-failure-response",
+              "name": "executionSource",
+              "value": "manual-trigger",
               "type": "string"
             }
           ]
