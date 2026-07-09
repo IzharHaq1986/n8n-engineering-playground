@@ -144,6 +144,12 @@
               "name": "workflowVersion",
               "value": "phase1-v1",
               "type": "string"
+            },
+            {
+              "id": "response-schema-version-assignment-phase1-build-success-response",
+              "name": "responseSchemaVersion",
+              "value": "health-check-response-v1",
+              "type": "string"
             }
           ]
         },
@@ -173,6 +179,12 @@
               "id": "workflow-version-assignment-phase1-build-failure-response",
               "name": "workflowVersion",
               "value": "phase1-v1",
+              "type": "string"
+            },
+            {
+              "id": "response-schema-version-assignment-phase1-build-failure-response",
+              "name": "responseSchemaVersion",
+              "value": "health-check-response-v1",
               "type": "string"
             }
           ]
