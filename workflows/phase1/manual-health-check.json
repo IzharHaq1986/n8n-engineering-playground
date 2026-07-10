@@ -224,6 +224,40 @@
       ],
       "id": "phase1-build-failure-response",
       "name": "Build Failure Response"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "validate-payload-status-present-condition",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        64,
+        -48
+      ],
+      "id": "phase1-validate-payload",
+      "name": "Validate Payload"
     }
   ],
   "pinData": {},
@@ -254,7 +288,7 @@
       "main": [
         [
           {
-            "node": "If",
+            "node": "Validate Payload",
             "type": "main",
             "index": 0
           }
@@ -295,6 +329,17 @@
         [
           {
             "node": "Build Failure Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Payload": {
+      "main": [
+        [
+          {
+            "node": "If",
             "type": "main",
             "index": 0
           }
