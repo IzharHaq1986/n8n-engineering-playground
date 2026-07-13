@@ -37,6 +37,14 @@ jobs:
           find . -name '*.json' -not -path './.git/*' -print0 \
             | xargs -0 -r -n1 jq empty
 
+  workflow-contract-validate:
+    name: workflow-contract-validate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate workflow contract
+        run: python3 scripts/validate_workflow_contract.py
+
   docker-compose-validate:
     name: docker-compose-validate
     runs-on: ubuntu-latest
