@@ -9,7 +9,7 @@ services:
     healthcheck:
       test:
         - CMD-SHELL
-        - wget --quiet --spider http://localhost:5678/rest/settings || exit 1
+        - wget --quiet --spider http://localhost:5678/ || exit 1
       interval: 10s
       timeout: 5s
       retries: 12
