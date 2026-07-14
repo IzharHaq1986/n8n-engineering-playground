@@ -28,6 +28,17 @@ PROHIBITED_KEYS = {
     "webhookId",
 }
 
+REQUIRED_CONNECTIONS = {
+    ("Manual Trigger", 0, "Edit Fields", 0),
+    ("Edit Fields", 0, "Code in JavaScript", 0),
+    ("Code in JavaScript", 0, "Validate Payload", 0),
+    ("Validate Payload", 0, "If", 0),
+    ("If", 0, "Mark Healthy", 0),
+    ("If", 1, "Mark Unhealthy", 0),
+    ("Mark Healthy", 0, "Build Success Response", 0),
+    ("Mark Unhealthy", 0, "Build Failure Response", 0),
+}
+
 
 def find_prohibited_keys(value: Any, path: str = "$") -> list[str]:
     """Return JSON paths containing prohibited runtime-specific keys."""
@@ -108,6 +119,54 @@ def validate_workflow(workflow_path: Path) -> list[str]:
 
     for node_id in missing_node_ids:
         errors.append(f"required node id is missing: {node_id}")
+
+    connections = workflow.get("connections")
+
+    if not isinstance(connections, dict):
+        errors.append("workflow connections must be an object")
+    else:
+        actual_connections: set[tuple[str, int, str, int]] = set()
+
+        for source_name, connection_types in connections.items():
+            if not isinstance(connection_types, dict):
+                continue
+
+            outputs = connection_types.get("main", [])
+
+            if not isinstance(outputs, list):
+                continue
+
+            for output_index, targets in enumerate(outputs):
+                if not isinstance(targets, list):
+                    continue
+
+                for target in targets:
+                    if not isinstance(target, dict):
+                        continue
+
+                    target_name = target.get("node")
+                    target_input = target.get("index", 0)
+
+                    if isinstance(target_name, str) and isinstance(
+                        target_input,
+                        int,
+                    ):
+                        actual_connections.add(
+                            (
+                                source_name,
+                                output_index,
+                                target_name,
+                                target_input,
+                            )
+                        )
+
+        for connection in sorted(REQUIRED_CONNECTIONS - actual_connections):
+            source_name, output_index, target_name, target_input = connection
+            errors.append(
+                "required connection is missing: "
+                f"{source_name}[{output_index}] -> "
+                f"{target_name}[{target_input}]"
+            )
 
     for violation in find_prohibited_keys(workflow):
         errors.append(f"prohibited runtime key found: {violation}")

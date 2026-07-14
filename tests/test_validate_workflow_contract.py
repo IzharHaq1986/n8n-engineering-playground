@@ -101,6 +101,17 @@ class WorkflowContractValidatorTests(unittest.TestCase):
             errors,
         )
 
+    def test_missing_required_connection_is_rejected(self) -> None:
+        workflow = copy.deepcopy(self.valid_workflow)
+        workflow["connections"]["If"]["main"][1] = []
+
+        errors = self.validate_copy(workflow)
+
+        self.assertIn(
+            "required connection is missing: If[1] -> Mark Unhealthy[0]",
+            errors,
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
