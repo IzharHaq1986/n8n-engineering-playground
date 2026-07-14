@@ -39,6 +39,18 @@ REQUIRED_CONNECTIONS = {
     ("Mark Unhealthy", 0, "Build Failure Response", 0),
 }
 
+REQUIRED_NODE_CONTRACTS = {
+    "manual-trigger": ("n8n-nodes-base.manualTrigger", 1),
+    "edit-fields": ("n8n-nodes-base.set", 3.4),
+    "phase1-code-node": ("n8n-nodes-base.code", 2),
+    "phase1-validate-payload": ("n8n-nodes-base.if", 2.3),
+    "phase1-if-status-ok": ("n8n-nodes-base.if", 2.3),
+    "phase1-mark-healthy": ("n8n-nodes-base.set", 3.4),
+    "phase1-mark-unhealthy": ("n8n-nodes-base.set", 3.4),
+    "phase1-build-success-response": ("n8n-nodes-base.set", 3.4),
+    "phase1-build-failure-response": ("n8n-nodes-base.set", 3.4),
+}
+
 REQUIRED_WORKFLOW_METADATA_TYPES = {
     "pinData": dict,
     "settings": dict,
@@ -173,6 +185,7 @@ def validate_workflow(workflow_path: Path) -> list[str]:
     node_ids: list[str] = []
     node_names: list[str] = []
     parameter_ids: list[str] = []
+    nodes_by_id: dict[str, dict[str, Any]] = {}
 
     for index, node in enumerate(nodes):
         if not isinstance(node, dict):
@@ -186,6 +199,7 @@ def validate_workflow(workflow_path: Path) -> list[str]:
             continue
 
         node_ids.append(node_id)
+        nodes_by_id[node_id] = node
 
         node_name = node.get("name")
 
@@ -218,6 +232,29 @@ def validate_workflow(workflow_path: Path) -> list[str]:
 
     for node_id in missing_node_ids:
         errors.append(f"required node id is missing: {node_id}")
+
+    for node_id in sorted(REQUIRED_NODE_CONTRACTS):
+        node = nodes_by_id.get(node_id)
+
+        if node is None:
+            continue
+
+        expected_type, expected_type_version = REQUIRED_NODE_CONTRACTS[node_id]
+        actual_type = node.get("type")
+        actual_type_version = node.get("typeVersion")
+
+        if actual_type != expected_type:
+            errors.append(
+                f"node type mismatch for {node_id}: "
+                f"expected {expected_type!r}, found {actual_type!r}"
+            )
+
+        if actual_type_version != expected_type_version:
+            errors.append(
+                f"node typeVersion mismatch for {node_id}: "
+                f"expected {expected_type_version!r}, "
+                f"found {actual_type_version!r}"
+            )
 
     duplicate_parameter_ids = sorted(
         parameter_id
