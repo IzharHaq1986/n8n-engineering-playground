@@ -265,6 +265,26 @@ class WorkflowContractValidatorTests(unittest.TestCase):
             errors,
         )
 
+    def test_unexpected_node_id_is_rejected(self) -> None:
+        workflow = copy.deepcopy(self.valid_workflow)
+        workflow["nodes"].append(
+            {
+                "id": "unexpected-node",
+                "name": "Unexpected Node",
+                "type": "n8n-nodes-base.noOp",
+                "typeVersion": 1,
+                "position": [0, 0],
+                "parameters": {},
+            }
+        )
+
+        errors = self.validate_copy(workflow)
+
+        self.assertIn(
+            "unexpected node id found: unexpected-node",
+            errors,
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
