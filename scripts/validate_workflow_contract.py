@@ -228,10 +228,17 @@ def validate_workflow(workflow_path: Path) -> list[str]:
     for node_name in duplicate_node_names:
         errors.append(f"duplicate node name: {node_name}")
 
-    missing_node_ids = sorted(REQUIRED_NODE_IDS - set(node_ids))
+    node_id_set = set(node_ids)
+
+    missing_node_ids = sorted(REQUIRED_NODE_IDS - node_id_set)
 
     for node_id in missing_node_ids:
         errors.append(f"required node id is missing: {node_id}")
+
+    unexpected_node_ids = sorted(node_id_set - REQUIRED_NODE_IDS)
+
+    for node_id in unexpected_node_ids:
+        errors.append(f"unexpected node id found: {node_id}")
 
     for node_id in sorted(REQUIRED_NODE_CONTRACTS):
         node = nodes_by_id.get(node_id)
