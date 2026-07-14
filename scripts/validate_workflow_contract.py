@@ -94,6 +94,7 @@ def validate_workflow(workflow_path: Path) -> list[str]:
         return errors
 
     node_ids: list[str] = []
+    node_names: list[str] = []
 
     for index, node in enumerate(nodes):
         if not isinstance(node, dict):
@@ -108,12 +109,28 @@ def validate_workflow(workflow_path: Path) -> list[str]:
 
         node_ids.append(node_id)
 
+        node_name = node.get("name")
+
+        if not isinstance(node_name, str) or not node_name.strip():
+            errors.append(f"nodes[{index}].name must be a non-empty string")
+        else:
+            node_names.append(node_name)
+
     duplicate_node_ids = sorted(
         node_id for node_id in set(node_ids) if node_ids.count(node_id) > 1
     )
 
     for node_id in duplicate_node_ids:
         errors.append(f"duplicate node id: {node_id}")
+
+    duplicate_node_names = sorted(
+        node_name
+        for node_name in set(node_names)
+        if node_names.count(node_name) > 1
+    )
+
+    for node_name in duplicate_node_names:
+        errors.append(f"duplicate node name: {node_name}")
 
     missing_node_ids = sorted(REQUIRED_NODE_IDS - set(node_ids))
 
@@ -126,8 +143,13 @@ def validate_workflow(workflow_path: Path) -> list[str]:
         errors.append("workflow connections must be an object")
     else:
         actual_connections: set[tuple[str, int, str, int]] = set()
+        node_name_set = set(node_names)
 
         for source_name, connection_types in connections.items():
+            if source_name not in node_name_set:
+                errors.append(
+                    f"connection source references missing node: {source_name}"
+                )
             if not isinstance(connection_types, dict):
                 continue
 
@@ -151,6 +173,12 @@ def validate_workflow(workflow_path: Path) -> list[str]:
                         target_input,
                         int,
                     ):
+                        if target_name not in node_name_set:
+                            errors.append(
+                                "connection target references missing node: "
+                                f"{target_name}"
+                            )
+
                         actual_connections.add(
                             (
                                 source_name,

@@ -112,6 +112,43 @@ class WorkflowContractValidatorTests(unittest.TestCase):
             errors,
         )
 
+    def test_duplicate_node_name_is_rejected(self) -> None:
+        workflow = copy.deepcopy(self.valid_workflow)
+        workflow["nodes"][1]["name"] = workflow["nodes"][0]["name"]
+
+        errors = self.validate_copy(workflow)
+
+        self.assertIn(
+            f"duplicate node name: {workflow['nodes'][0]['name']}",
+            errors,
+        )
+
+    def test_missing_connection_source_is_rejected(self) -> None:
+        workflow = copy.deepcopy(self.valid_workflow)
+        workflow["connections"]["Missing Source"] = {
+            "main": [[]],
+        }
+
+        errors = self.validate_copy(workflow)
+
+        self.assertIn(
+            "connection source references missing node: Missing Source",
+            errors,
+        )
+
+    def test_missing_connection_target_is_rejected(self) -> None:
+        workflow = copy.deepcopy(self.valid_workflow)
+        workflow["connections"]["Manual Trigger"]["main"][0][0][
+            "node"
+        ] = "Missing Target"
+
+        errors = self.validate_copy(workflow)
+
+        self.assertIn(
+            "connection target references missing node: Missing Target",
+            errors,
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
