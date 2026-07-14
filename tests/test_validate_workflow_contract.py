@@ -1,0 +1,106 @@
+#!/usr/bin/env python3
+"""Tests for the workflow contract validator."""
+
+from __future__ import annotations
+
+import copy
+import importlib.util
+import json
+import tempfile
+import unittest
+from pathlib import Path
+from types import ModuleType
+from typing import Any
+
+
+REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
+VALIDATOR_PATH = REPOSITORY_ROOT / "scripts/validate_workflow_contract.py"
+WORKFLOW_PATH = (
+    REPOSITORY_ROOT / "workflows/phase1/manual-health-check.json"
+)
+
+
+def load_validator_module() -> ModuleType:
+    """Load the validator script as an importable module."""
+    spec = importlib.util.spec_from_file_location(
+        "validate_workflow_contract",
+        VALIDATOR_PATH,
+    )
+
+    if spec is None or spec.loader is None:
+        raise RuntimeError(f"Unable to load validator: {VALIDATOR_PATH}")
+
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+VALIDATOR = load_validator_module()
+
+
+class WorkflowContractValidatorTests(unittest.TestCase):
+    """Verify positive and negative workflow contract behavior."""
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.valid_workflow = json.loads(
+            WORKFLOW_PATH.read_text(encoding="utf-8")
+        )
+
+    def validate_copy(self, workflow: dict[str, Any]) -> list[str]:
+        """Write a temporary workflow and return validation errors."""
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            workflow_path = Path(temporary_directory) / "workflow.json"
+            workflow_path.write_text(
+                json.dumps(workflow),
+                encoding="utf-8",
+            )
+            return VALIDATOR.validate_workflow(workflow_path)
+
+    def test_repository_workflow_passes(self) -> None:
+        errors = VALIDATOR.validate_workflow(WORKFLOW_PATH)
+
+        self.assertEqual([], errors)
+
+    def test_missing_required_node_is_rejected(self) -> None:
+        workflow = copy.deepcopy(self.valid_workflow)
+        workflow["nodes"] = [
+            node
+            for node in workflow["nodes"]
+            if node.get("id") != "phase1-code-node"
+        ]
+
+        errors = self.validate_copy(workflow)
+
+        self.assertIn(
+            "required node id is missing: phase1-code-node",
+            errors,
+        )
+
+    def test_duplicate_node_id_is_rejected(self) -> None:
+        workflow = copy.deepcopy(self.valid_workflow)
+        workflow["nodes"][1]["id"] = workflow["nodes"][0]["id"]
+
+        errors = self.validate_copy(workflow)
+
+        self.assertIn(
+            f"duplicate node id: {workflow['nodes'][0]['id']}",
+            errors,
+        )
+
+    def test_prohibited_runtime_key_is_rejected(self) -> None:
+        workflow = copy.deepcopy(self.valid_workflow)
+        workflow["metadata"] = {
+            "instanceId": "temporary-runtime-value",
+        }
+
+        errors = self.validate_copy(workflow)
+
+        self.assertIn(
+            "prohibited runtime key found: $.metadata.instanceId",
+            errors,
+        )
+
+
+if __name__ == "__main__":
+    unittest.main()
