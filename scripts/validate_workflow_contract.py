@@ -39,6 +39,42 @@ REQUIRED_CONNECTIONS = {
     ("Mark Unhealthy", 0, "Build Failure Response", 0),
 }
 
+REQUIRED_PARAMETER_IDS = {
+    "status-assignment",
+    "if-status-ok-condition",
+    "validate-payload-status-present-condition",
+    "health-check-result-passed-assignment",
+    "health-check-result-failed-assignment",
+    "workflow-assignment-phase1-build-success-response",
+    "workflow-version-assignment-phase1-build-success-response",
+    "response-schema-version-assignment-phase1-build-success-response",
+    "execution-source-assignment-phase1-build-success-response",
+    "execution-status-assignment-phase1-build-success-response",
+    "workflow-assignment-phase1-build-failure-response",
+    "workflow-version-assignment-phase1-build-failure-response",
+    "response-schema-version-assignment-phase1-build-failure-response",
+    "execution-source-assignment-phase1-build-failure-response",
+    "execution-status-assignment-phase1-build-failure-response",
+}
+
+
+def collect_parameter_ids(value: Any) -> list[str]:
+    """Collect string IDs recursively from a node parameters object."""
+    identifiers: list[str] = []
+
+    if isinstance(value, dict):
+        for key, child in value.items():
+            if key == "id" and isinstance(child, str):
+                identifiers.append(child)
+
+            identifiers.extend(collect_parameter_ids(child))
+
+    elif isinstance(value, list):
+        for child in value:
+            identifiers.extend(collect_parameter_ids(child))
+
+    return identifiers
+
 
 def find_prohibited_keys(value: Any, path: str = "$") -> list[str]:
     """Return JSON paths containing prohibited runtime-specific keys."""
@@ -95,6 +131,7 @@ def validate_workflow(workflow_path: Path) -> list[str]:
 
     node_ids: list[str] = []
     node_names: list[str] = []
+    parameter_ids: list[str] = []
 
     for index, node in enumerate(nodes):
         if not isinstance(node, dict):
@@ -116,6 +153,10 @@ def validate_workflow(workflow_path: Path) -> list[str]:
         else:
             node_names.append(node_name)
 
+        parameter_ids.extend(
+            collect_parameter_ids(node.get("parameters", {}))
+        )
+
     duplicate_node_ids = sorted(
         node_id for node_id in set(node_ids) if node_ids.count(node_id) > 1
     )
@@ -136,6 +177,22 @@ def validate_workflow(workflow_path: Path) -> list[str]:
 
     for node_id in missing_node_ids:
         errors.append(f"required node id is missing: {node_id}")
+
+    duplicate_parameter_ids = sorted(
+        parameter_id
+        for parameter_id in set(parameter_ids)
+        if parameter_ids.count(parameter_id) > 1
+    )
+
+    for parameter_id in duplicate_parameter_ids:
+        errors.append(f"duplicate parameter id: {parameter_id}")
+
+    missing_parameter_ids = sorted(
+        REQUIRED_PARAMETER_IDS - set(parameter_ids)
+    )
+
+    for parameter_id in missing_parameter_ids:
+        errors.append(f"required parameter id is missing: {parameter_id}")
 
     connections = workflow.get("connections")
 
