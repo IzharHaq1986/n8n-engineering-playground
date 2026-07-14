@@ -210,6 +210,43 @@ class WorkflowContractValidatorTests(unittest.TestCase):
             errors,
         )
 
+    def test_node_type_mismatch_is_rejected(self) -> None:
+        workflow = copy.deepcopy(self.valid_workflow)
+
+        for node in workflow["nodes"]:
+            if node.get("id") == "phase1-code-node":
+                node["type"] = "n8n-nodes-base.set"
+                break
+        else:
+            self.fail("phase1-code-node was not found")
+
+        errors = self.validate_copy(workflow)
+
+        self.assertIn(
+            "node type mismatch for phase1-code-node: "
+            "expected 'n8n-nodes-base.code', "
+            "found 'n8n-nodes-base.set'",
+            errors,
+        )
+
+    def test_node_type_version_mismatch_is_rejected(self) -> None:
+        workflow = copy.deepcopy(self.valid_workflow)
+
+        for node in workflow["nodes"]:
+            if node.get("id") == "phase1-if-status-ok":
+                node["typeVersion"] = 1
+                break
+        else:
+            self.fail("phase1-if-status-ok was not found")
+
+        errors = self.validate_copy(workflow)
+
+        self.assertIn(
+            "node typeVersion mismatch for phase1-if-status-ok: "
+            "expected 2.3, found 1",
+            errors,
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
