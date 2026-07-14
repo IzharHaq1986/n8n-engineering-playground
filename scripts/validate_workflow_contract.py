@@ -39,6 +39,19 @@ REQUIRED_CONNECTIONS = {
     ("Mark Unhealthy", 0, "Build Failure Response", 0),
 }
 
+REQUIRED_WORKFLOW_METADATA_TYPES = {
+    "pinData": dict,
+    "settings": dict,
+    "tags": list,
+    "nodeGroups": list,
+}
+
+REQUIRED_SETTINGS = {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": False,
+}
+
 REQUIRED_PARAMETER_IDS = {
     "status-assignment",
     "if-status-ok-condition",
@@ -116,6 +129,34 @@ def validate_workflow(workflow_path: Path) -> list[str]:
 
     if "id" in workflow:
         errors.append("workflow must not contain a top-level runtime id")
+
+    for field_name, expected_type in REQUIRED_WORKFLOW_METADATA_TYPES.items():
+        if field_name not in workflow:
+            errors.append(
+                f"required workflow metadata field is missing: {field_name}"
+            )
+            continue
+
+        field_value = workflow[field_name]
+
+        if not isinstance(field_value, expected_type):
+            errors.append(
+                "workflow metadata field has invalid type: "
+                f"{field_name} must be {expected_type.__name__}"
+            )
+
+    settings = workflow.get("settings")
+
+    if isinstance(settings, dict):
+        for setting_name, expected_value in REQUIRED_SETTINGS.items():
+            actual_value = settings.get(setting_name)
+
+            if actual_value != expected_value:
+                errors.append(
+                    "workflow setting must be "
+                    f"{setting_name}={expected_value!r}, "
+                    f"found {actual_value!r}"
+                )
 
     version_id = workflow.get("versionId")
     if version_id != EXPECTED_VERSION_ID:
