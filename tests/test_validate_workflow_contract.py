@@ -149,6 +149,32 @@ class WorkflowContractValidatorTests(unittest.TestCase):
             errors,
         )
 
+    def test_missing_required_parameter_id_is_rejected(self) -> None:
+        workflow = copy.deepcopy(self.valid_workflow)
+        workflow["nodes"][1]["parameters"]["assignments"]["assignments"][0][
+            "id"
+        ] = "temporary-status-assignment"
+
+        errors = self.validate_copy(workflow)
+
+        self.assertIn(
+            "required parameter id is missing: status-assignment",
+            errors,
+        )
+
+    def test_duplicate_parameter_id_is_rejected(self) -> None:
+        workflow = copy.deepcopy(self.valid_workflow)
+        workflow["nodes"][4]["parameters"]["assignments"]["assignments"][0][
+            "id"
+        ] = "status-assignment"
+
+        errors = self.validate_copy(workflow)
+
+        self.assertIn(
+            "duplicate parameter id: status-assignment",
+            errors,
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
