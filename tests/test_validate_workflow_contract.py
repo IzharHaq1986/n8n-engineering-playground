@@ -175,6 +175,41 @@ class WorkflowContractValidatorTests(unittest.TestCase):
             errors,
         )
 
+    def test_missing_workflow_metadata_field_is_rejected(self) -> None:
+        workflow = copy.deepcopy(self.valid_workflow)
+        del workflow["pinData"]
+
+        errors = self.validate_copy(workflow)
+
+        self.assertIn(
+            "required workflow metadata field is missing: pinData",
+            errors,
+        )
+
+    def test_invalid_workflow_metadata_type_is_rejected(self) -> None:
+        workflow = copy.deepcopy(self.valid_workflow)
+        workflow["nodeGroups"] = {}
+
+        errors = self.validate_copy(workflow)
+
+        self.assertIn(
+            "workflow metadata field has invalid type: "
+            "nodeGroups must be list",
+            errors,
+        )
+
+    def test_invalid_workflow_setting_is_rejected(self) -> None:
+        workflow = copy.deepcopy(self.valid_workflow)
+        workflow["settings"]["executionOrder"] = "legacy"
+
+        errors = self.validate_copy(workflow)
+
+        self.assertIn(
+            "workflow setting must be executionOrder='v1', "
+            "found 'legacy'",
+            errors,
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
