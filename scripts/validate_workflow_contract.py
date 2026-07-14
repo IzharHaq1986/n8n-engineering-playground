@@ -331,6 +331,14 @@ def validate_workflow(workflow_path: Path) -> list[str]:
                 f"{target_name}[{target_input}]"
             )
 
+        for connection in sorted(actual_connections - REQUIRED_CONNECTIONS):
+            source_name, output_index, target_name, target_input = connection
+            errors.append(
+                "unexpected connection found: "
+                f"{source_name}[{output_index}] -> "
+                f"{target_name}[{target_input}]"
+            )
+
     for violation in find_prohibited_keys(workflow):
         errors.append(f"prohibited runtime key found: {violation}")
 

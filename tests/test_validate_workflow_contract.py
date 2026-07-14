@@ -247,6 +247,24 @@ class WorkflowContractValidatorTests(unittest.TestCase):
             errors,
         )
 
+    def test_unexpected_connection_is_rejected(self) -> None:
+        workflow = copy.deepcopy(self.valid_workflow)
+        workflow["connections"]["Edit Fields"]["main"][0].append(
+            {
+                "node": "Build Success Response",
+                "type": "main",
+                "index": 0,
+            }
+        )
+
+        errors = self.validate_copy(workflow)
+
+        self.assertIn(
+            "unexpected connection found: "
+            "Edit Fields[0] -> Build Success Response[0]",
+            errors,
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
