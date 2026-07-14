@@ -40,15 +40,51 @@ REQUIRED_CONNECTIONS = {
 }
 
 REQUIRED_NODE_CONTRACTS = {
-    "manual-trigger": ("n8n-nodes-base.manualTrigger", 1),
-    "edit-fields": ("n8n-nodes-base.set", 3.4),
-    "phase1-code-node": ("n8n-nodes-base.code", 2),
-    "phase1-validate-payload": ("n8n-nodes-base.if", 2.3),
-    "phase1-if-status-ok": ("n8n-nodes-base.if", 2.3),
-    "phase1-mark-healthy": ("n8n-nodes-base.set", 3.4),
-    "phase1-mark-unhealthy": ("n8n-nodes-base.set", 3.4),
-    "phase1-build-success-response": ("n8n-nodes-base.set", 3.4),
-    "phase1-build-failure-response": ("n8n-nodes-base.set", 3.4),
+    "manual-trigger": (
+        "Manual Trigger",
+        "n8n-nodes-base.manualTrigger",
+        1,
+    ),
+    "edit-fields": (
+        "Edit Fields",
+        "n8n-nodes-base.set",
+        3.4,
+    ),
+    "phase1-code-node": (
+        "Code in JavaScript",
+        "n8n-nodes-base.code",
+        2,
+    ),
+    "phase1-validate-payload": (
+        "Validate Payload",
+        "n8n-nodes-base.if",
+        2.3,
+    ),
+    "phase1-if-status-ok": (
+        "If",
+        "n8n-nodes-base.if",
+        2.3,
+    ),
+    "phase1-mark-healthy": (
+        "Mark Healthy",
+        "n8n-nodes-base.set",
+        3.4,
+    ),
+    "phase1-mark-unhealthy": (
+        "Mark Unhealthy",
+        "n8n-nodes-base.set",
+        3.4,
+    ),
+    "phase1-build-success-response": (
+        "Build Success Response",
+        "n8n-nodes-base.set",
+        3.4,
+    ),
+    "phase1-build-failure-response": (
+        "Build Failure Response",
+        "n8n-nodes-base.set",
+        3.4,
+    ),
 }
 
 REQUIRED_WORKFLOW_METADATA_TYPES = {
@@ -246,9 +282,21 @@ def validate_workflow(workflow_path: Path) -> list[str]:
         if node is None:
             continue
 
-        expected_type, expected_type_version = REQUIRED_NODE_CONTRACTS[node_id]
+        (
+            expected_name,
+            expected_type,
+            expected_type_version,
+        ) = REQUIRED_NODE_CONTRACTS[node_id]
+
+        actual_name = node.get("name")
         actual_type = node.get("type")
         actual_type_version = node.get("typeVersion")
+
+        if actual_name != expected_name:
+            errors.append(
+                f"node name mismatch for {node_id}: "
+                f"expected {expected_name!r}, found {actual_name!r}"
+            )
 
         if actual_type != expected_type:
             errors.append(

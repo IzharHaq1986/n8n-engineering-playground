@@ -285,6 +285,25 @@ class WorkflowContractValidatorTests(unittest.TestCase):
             errors,
         )
 
+    def test_node_name_mismatch_is_rejected(self) -> None:
+        workflow = copy.deepcopy(self.valid_workflow)
+
+        for node in workflow["nodes"]:
+            if node.get("id") == "phase1-code-node":
+                node["name"] = "Renamed Code Node"
+                break
+        else:
+            self.fail("phase1-code-node was not found")
+
+        errors = self.validate_copy(workflow)
+
+        self.assertIn(
+            "node name mismatch for phase1-code-node: "
+            "expected 'Code in JavaScript', "
+            "found 'Renamed Code Node'",
+            errors,
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
