@@ -87,6 +87,73 @@ REQUIRED_NODE_CONTRACTS = {
     ),
 }
 
+REQUIRED_RESPONSE_ASSIGNMENTS = {
+    "phase1-build-success-response": [
+        (
+            "workflow-assignment-phase1-build-success-response",
+            "workflow",
+            "manual-health-check",
+            "string",
+        ),
+        (
+            "workflow-version-assignment-phase1-build-success-response",
+            "workflowVersion",
+            "phase1-v1",
+            "string",
+        ),
+        (
+            "response-schema-version-assignment-phase1-build-success-response",
+            "responseSchemaVersion",
+            "health-check-response-v1",
+            "string",
+        ),
+        (
+            "execution-source-assignment-phase1-build-success-response",
+            "executionSource",
+            "manual-trigger",
+            "string",
+        ),
+        (
+            "execution-status-assignment-phase1-build-success-response",
+            "executionStatus",
+            "completed",
+            "string",
+        ),
+    ],
+    "phase1-build-failure-response": [
+        (
+            "workflow-assignment-phase1-build-failure-response",
+            "workflow",
+            "manual-health-check",
+            "string",
+        ),
+        (
+            "workflow-version-assignment-phase1-build-failure-response",
+            "workflowVersion",
+            "phase1-v1",
+            "string",
+        ),
+        (
+            "response-schema-version-assignment-phase1-build-failure-response",
+            "responseSchemaVersion",
+            "health-check-response-v1",
+            "string",
+        ),
+        (
+            "execution-source-assignment-phase1-build-failure-response",
+            "executionSource",
+            "manual-trigger",
+            "string",
+        ),
+        (
+            "execution-status-assignment-phase1-build-failure-response",
+            "executionStatus",
+            "completed",
+            "string",
+        ),
+    ],
+}
+
 REQUIRED_WORKFLOW_METADATA_TYPES = {
     "pinData": dict,
     "settings": dict,
@@ -310,6 +377,62 @@ def validate_workflow(workflow_path: Path) -> list[str]:
                 f"expected {expected_type_version!r}, "
                 f"found {actual_type_version!r}"
             )
+
+    for node_id in sorted(REQUIRED_RESPONSE_ASSIGNMENTS):
+        node = nodes_by_id.get(node_id)
+
+        if node is None:
+            continue
+
+        assignments = (
+            node.get("parameters", {})
+            .get("assignments", {})
+            .get("assignments")
+        )
+
+        expected_assignments = REQUIRED_RESPONSE_ASSIGNMENTS[node_id]
+
+        if not isinstance(assignments, list):
+            errors.append(
+                f"response assignments must be a list for {node_id}"
+            )
+            continue
+
+        if len(assignments) != len(expected_assignments):
+            errors.append(
+                f"response assignment count mismatch for {node_id}: "
+                f"expected {len(expected_assignments)}, "
+                f"found {len(assignments)}"
+            )
+            continue
+
+        actual_assignments: list[tuple[Any, Any, Any, Any]] = []
+
+        for assignment in assignments:
+            if not isinstance(assignment, dict):
+                actual_assignments.append((None, None, None, None))
+                continue
+
+            actual_assignments.append(
+                (
+                    assignment.get("id"),
+                    assignment.get("name"),
+                    assignment.get("value"),
+                    assignment.get("type"),
+                )
+            )
+
+        for index, (
+            expected_assignment,
+            actual_assignment,
+        ) in enumerate(zip(expected_assignments, actual_assignments)):
+            if actual_assignment != expected_assignment:
+                errors.append(
+                    f"response assignment mismatch for {node_id} "
+                    f"at index {index}: expected "
+                    f"{expected_assignment!r}, found "
+                    f"{actual_assignment!r}"
+                )
 
     duplicate_parameter_ids = sorted(
         parameter_id
