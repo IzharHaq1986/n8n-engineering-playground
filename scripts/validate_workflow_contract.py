@@ -119,6 +119,39 @@ REQUIRED_INCLUDE_OTHER_FIELDS = {
     "phase1-mark-unhealthy": True,
 }
 
+REQUIRED_BRANCH_CONDITIONS = {
+    "phase1-if-status-ok": [
+        (
+            "if-status-ok-condition",
+            "={{ $json.status }}",
+            {
+                "operation": "equals",
+                "type": "string",
+            },
+            "ok",
+        ),
+    ],
+    "phase1-validate-payload": [
+        (
+            "validate-payload-status-present-condition",
+            "={{ $json.status }}",
+            {
+                "operation": "notEmpty",
+                "singleValue": True,
+                "type": "string",
+            },
+            "",
+        ),
+    ],
+}
+
+REQUIRED_CONDITION_OPTIONS = {
+    "caseSensitive": True,
+    "leftValue": "",
+    "typeValidation": "strict",
+    "version": 3,
+}
+
 REQUIRED_RESPONSE_ASSIGNMENTS = {
     "phase1-build-success-response": [
         (
@@ -463,6 +496,60 @@ def validate_workflow(workflow_path: Path) -> list[str]:
                     f"expected {expected_include_other_fields!r}, "
                     f"found {actual_include_other_fields!r}"
                 )
+
+    for node_id in sorted(REQUIRED_BRANCH_CONDITIONS):
+        node = nodes_by_id.get(node_id)
+
+        if node is None:
+            continue
+
+        condition_container = (
+            node.get("parameters", {})
+            .get("conditions", {})
+        )
+        conditions = condition_container.get("conditions")
+        combinator = condition_container.get("combinator")
+        condition_options = condition_container.get("options")
+
+        expected_conditions = REQUIRED_BRANCH_CONDITIONS[node_id]
+
+        if not isinstance(conditions, list):
+            errors.append(
+                f"branch conditions must be a list for {node_id}"
+            )
+            continue
+
+        actual_conditions = [
+            (
+                condition.get("id"),
+                condition.get("leftValue"),
+                condition.get("operator"),
+                condition.get("rightValue"),
+            )
+            if isinstance(condition, dict)
+            else (None, None, None, None)
+            for condition in conditions
+        ]
+
+        if actual_conditions != expected_conditions:
+            errors.append(
+                f"branch condition contract mismatch for {node_id}: "
+                f"expected {expected_conditions!r}, "
+                f"found {actual_conditions!r}"
+            )
+
+        if combinator != "and":
+            errors.append(
+                f"branch condition combinator mismatch for {node_id}: "
+                f"expected 'and', found {combinator!r}"
+            )
+
+        if condition_options != REQUIRED_CONDITION_OPTIONS:
+            errors.append(
+                f"branch condition options mismatch for {node_id}: "
+                f"expected {REQUIRED_CONDITION_OPTIONS!r}, "
+                f"found {condition_options!r}"
+            )
 
     for node_id in sorted(REQUIRED_RESPONSE_ASSIGNMENTS):
         node = nodes_by_id.get(node_id)
