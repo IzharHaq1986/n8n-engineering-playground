@@ -322,6 +322,59 @@ class WorkflowContractValidatorTests(unittest.TestCase):
             errors,
         )
 
+    def test_response_assignment_value_mismatch_is_rejected(self) -> None:
+        workflow = copy.deepcopy(self.valid_workflow)
+
+        for node in workflow["nodes"]:
+            if node.get("id") == "phase1-build-success-response":
+                assignments = (
+                    node["parameters"]["assignments"]["assignments"]
+                )
+                assignments[4]["value"] = "rejected"
+                break
+        else:
+            self.fail("phase1-build-success-response was not found")
+
+        errors = self.validate_copy(workflow)
+
+        self.assertTrue(
+            any(
+                error.startswith(
+                    "response assignment mismatch for "
+                    "phase1-build-success-response at index 4"
+                )
+                for error in errors
+            )
+        )
+
+    def test_response_assignment_order_mismatch_is_rejected(self) -> None:
+        workflow = copy.deepcopy(self.valid_workflow)
+
+        for node in workflow["nodes"]:
+            if node.get("id") == "phase1-build-failure-response":
+                assignments = (
+                    node["parameters"]["assignments"]["assignments"]
+                )
+                assignments[0], assignments[1] = (
+                    assignments[1],
+                    assignments[0],
+                )
+                break
+        else:
+            self.fail("phase1-build-failure-response was not found")
+
+        errors = self.validate_copy(workflow)
+
+        self.assertTrue(
+            any(
+                error.startswith(
+                    "response assignment mismatch for "
+                    "phase1-build-failure-response at index 0"
+                )
+                for error in errors
+            )
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
