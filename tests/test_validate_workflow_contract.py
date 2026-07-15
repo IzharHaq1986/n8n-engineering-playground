@@ -304,6 +304,24 @@ class WorkflowContractValidatorTests(unittest.TestCase):
             errors,
         )
 
+    def test_unexpected_parameter_id_is_rejected(self) -> None:
+        workflow = copy.deepcopy(self.valid_workflow)
+        workflow["nodes"][1]["parameters"]["assignments"]["assignments"].append(
+            {
+                "id": "unexpected-assignment-id",
+                "name": "temporaryField",
+                "value": "temporaryValue",
+                "type": "string",
+            }
+        )
+
+        errors = self.validate_copy(workflow)
+
+        self.assertIn(
+            "unexpected parameter id found: unexpected-assignment-id",
+            errors,
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

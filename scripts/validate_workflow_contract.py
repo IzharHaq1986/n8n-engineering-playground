@@ -320,12 +320,21 @@ def validate_workflow(workflow_path: Path) -> list[str]:
     for parameter_id in duplicate_parameter_ids:
         errors.append(f"duplicate parameter id: {parameter_id}")
 
+    parameter_id_set = set(parameter_ids)
+
     missing_parameter_ids = sorted(
-        REQUIRED_PARAMETER_IDS - set(parameter_ids)
+        REQUIRED_PARAMETER_IDS - parameter_id_set
     )
 
     for parameter_id in missing_parameter_ids:
         errors.append(f"required parameter id is missing: {parameter_id}")
+
+    unexpected_parameter_ids = sorted(
+        parameter_id_set - REQUIRED_PARAMETER_IDS
+    )
+
+    for parameter_id in unexpected_parameter_ids:
+        errors.append(f"unexpected parameter id found: {parameter_id}")
 
     connections = workflow.get("connections")
 
