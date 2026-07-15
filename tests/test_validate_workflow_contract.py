@@ -467,6 +467,74 @@ class WorkflowContractValidatorTests(unittest.TestCase):
 
         self._assert_edit_fields_contract_rejected(mutate)
 
+    def test_mark_healthy_assignment_mismatch_is_rejected(self) -> None:
+        workflow = copy.deepcopy(self.valid_workflow)
+
+        for node in workflow["nodes"]:
+            if node.get("id") == "phase1-mark-healthy":
+                assignment = (
+                    node["parameters"]["assignments"]["assignments"][0]
+                )
+                assignment["value"] = "failed"
+                break
+        else:
+            self.fail("phase1-mark-healthy was not found")
+
+        errors = self.validate_copy(workflow)
+
+        self.assertTrue(
+            any(
+                error.startswith(
+                    "branch assignment contract mismatch for "
+                    "phase1-mark-healthy"
+                )
+                for error in errors
+            )
+        )
+
+    def test_mark_unhealthy_assignment_mismatch_is_rejected(self) -> None:
+        workflow = copy.deepcopy(self.valid_workflow)
+
+        for node in workflow["nodes"]:
+            if node.get("id") == "phase1-mark-unhealthy":
+                assignment = (
+                    node["parameters"]["assignments"]["assignments"][0]
+                )
+                assignment["value"] = "passed"
+                break
+        else:
+            self.fail("phase1-mark-unhealthy was not found")
+
+        errors = self.validate_copy(workflow)
+
+        self.assertTrue(
+            any(
+                error.startswith(
+                    "branch assignment contract mismatch for "
+                    "phase1-mark-unhealthy"
+                )
+                for error in errors
+            )
+        )
+
+    def test_health_outcome_include_other_fields_is_required(self) -> None:
+        workflow = copy.deepcopy(self.valid_workflow)
+
+        for node in workflow["nodes"]:
+            if node.get("id") == "phase1-mark-healthy":
+                node["parameters"]["includeOtherFields"] = False
+                break
+        else:
+            self.fail("phase1-mark-healthy was not found")
+
+        errors = self.validate_copy(workflow)
+
+        self.assertIn(
+            "includeOtherFields mismatch for phase1-mark-healthy: "
+            "expected True, found False",
+            errors,
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

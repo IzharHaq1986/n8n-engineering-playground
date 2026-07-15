@@ -96,6 +96,27 @@ REQUIRED_BRANCH_ASSIGNMENTS = {
             "string",
         ),
     ],
+    "phase1-mark-healthy": [
+        (
+            "health-check-result-passed-assignment",
+            "healthCheckResult",
+            "passed",
+            "string",
+        ),
+    ],
+    "phase1-mark-unhealthy": [
+        (
+            "health-check-result-failed-assignment",
+            "healthCheckResult",
+            "failed",
+            "string",
+        ),
+    ],
+}
+
+REQUIRED_INCLUDE_OTHER_FIELDS = {
+    "phase1-mark-healthy": True,
+    "phase1-mark-unhealthy": True,
 }
 
 REQUIRED_RESPONSE_ASSIGNMENTS = {
@@ -427,6 +448,21 @@ def validate_workflow(workflow_path: Path) -> list[str]:
                 f"expected {expected_assignments!r}, "
                 f"found {actual_assignments!r}"
             )
+
+        if node_id in REQUIRED_INCLUDE_OTHER_FIELDS:
+            actual_include_other_fields = (
+                node.get("parameters", {}).get("includeOtherFields")
+            )
+            expected_include_other_fields = (
+                REQUIRED_INCLUDE_OTHER_FIELDS[node_id]
+            )
+
+            if actual_include_other_fields != expected_include_other_fields:
+                errors.append(
+                    f"includeOtherFields mismatch for {node_id}: "
+                    f"expected {expected_include_other_fields!r}, "
+                    f"found {actual_include_other_fields!r}"
+                )
 
     for node_id in sorted(REQUIRED_RESPONSE_ASSIGNMENTS):
         node = nodes_by_id.get(node_id)
