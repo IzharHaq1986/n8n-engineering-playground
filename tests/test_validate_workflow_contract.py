@@ -6,6 +6,8 @@ from __future__ import annotations
 import copy
 import importlib.util
 import json
+import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -374,6 +376,96 @@ class WorkflowContractValidatorTests(unittest.TestCase):
                 for error in errors
             )
         )
+
+    def _assert_edit_fields_contract_rejected(self, mutate_workflow):
+        workflow_path = Path(
+            "workflows/phase1/manual-health-check.json"
+        )
+        workflow = json.loads(workflow_path.read_text(encoding="utf-8"))
+
+        edit_fields = next(
+            node for node in workflow["nodes"]
+            if node["id"] == "edit-fields"
+        )
+
+        mutate_workflow(edit_fields)
+
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            candidate_path = (
+                Path(temporary_directory) / "manual-health-check.json"
+            )
+            candidate_path.write_text(
+                json.dumps(workflow, indent=2) + "\n",
+                encoding="utf-8",
+            )
+
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    "scripts/validate_workflow_contract.py",
+                    str(candidate_path),
+                ],
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+
+        output = f"{result.stdout}\n{result.stderr}"
+
+        self.assertNotEqual(
+            result.returncode,
+            0,
+            msg="The mutated Edit Fields contract was unexpectedly accepted.",
+        )
+        self.assertIn("edit-fields", output)
+
+    def test_edit_fields_assignment_id_mismatch_is_rejected(self):
+        def mutate(node):
+            assignment = node["parameters"]["assignments"]["assignments"][0]
+            assignment["id"] = "unexpected-status-assignment"
+
+        self._assert_edit_fields_contract_rejected(mutate)
+
+    def test_edit_fields_assignment_name_mismatch_is_rejected(self):
+        def mutate(node):
+            assignment = node["parameters"]["assignments"]["assignments"][0]
+            assignment["name"] = "unexpected-status"
+
+        self._assert_edit_fields_contract_rejected(mutate)
+
+    def test_edit_fields_assignment_type_mismatch_is_rejected(self):
+        def mutate(node):
+            assignment = node["parameters"]["assignments"]["assignments"][0]
+            assignment["type"] = "boolean"
+
+        self._assert_edit_fields_contract_rejected(mutate)
+
+    def test_edit_fields_assignment_value_mismatch_is_rejected(self):
+        def mutate(node):
+            assignment = node["parameters"]["assignments"]["assignments"][0]
+            assignment["value"] = "not-ok"
+
+        self._assert_edit_fields_contract_rejected(mutate)
+
+    def test_edit_fields_missing_assignment_is_rejected(self):
+        def mutate(node):
+            node["parameters"]["assignments"]["assignments"] = []
+
+        self._assert_edit_fields_contract_rejected(mutate)
+
+    def test_edit_fields_unexpected_assignment_is_rejected(self):
+        def mutate(node):
+            assignments = node["parameters"]["assignments"]["assignments"]
+            assignments.append(
+                {
+                    "id": "unexpected-assignment",
+                    "name": "unexpected",
+                    "type": "string",
+                    "value": "unexpected",
+                }
+            )
+
+        self._assert_edit_fields_contract_rejected(mutate)
 
 
 if __name__ == "__main__":

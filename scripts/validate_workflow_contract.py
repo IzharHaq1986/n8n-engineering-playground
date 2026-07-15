@@ -87,6 +87,17 @@ REQUIRED_NODE_CONTRACTS = {
     ),
 }
 
+REQUIRED_BRANCH_ASSIGNMENTS = {
+    "edit-fields": [
+        (
+            "status-assignment",
+            "status",
+            "ok",
+            "string",
+        ),
+    ],
+}
+
 REQUIRED_RESPONSE_ASSIGNMENTS = {
     "phase1-build-success-response": [
         (
@@ -378,6 +389,45 @@ def validate_workflow(workflow_path: Path) -> list[str]:
                 f"found {actual_type_version!r}"
             )
 
+    for node_id in sorted(REQUIRED_BRANCH_ASSIGNMENTS):
+        node = nodes_by_id.get(node_id)
+
+        if node is None:
+            continue
+
+        assignments = (
+            node.get("parameters", {})
+            .get("assignments", {})
+            .get("assignments")
+        )
+
+        expected_assignments = REQUIRED_BRANCH_ASSIGNMENTS[node_id]
+
+        if not isinstance(assignments, list):
+            errors.append(
+                f"branch assignments must be a list for {node_id}"
+            )
+            continue
+
+        actual_assignments = [
+            (
+                assignment.get("id"),
+                assignment.get("name"),
+                assignment.get("value"),
+                assignment.get("type"),
+            )
+            if isinstance(assignment, dict)
+            else (None, None, None, None)
+            for assignment in assignments
+        ]
+
+        if actual_assignments != expected_assignments:
+            errors.append(
+                f"branch assignment contract mismatch for {node_id}: "
+                f"expected {expected_assignments!r}, "
+                f"found {actual_assignments!r}"
+            )
+
     for node_id in sorted(REQUIRED_RESPONSE_ASSIGNMENTS):
         node = nodes_by_id.get(node_id)
 
@@ -534,17 +584,30 @@ def validate_workflow(workflow_path: Path) -> list[str]:
 
 def main() -> int:
     """Run workflow contract validation."""
-    errors = validate_workflow(WORKFLOW_PATH)
+    if len(sys.argv) > 2:
+        print(
+            "Usage: validate_workflow_contract.py [workflow-path]",
+            file=sys.stderr,
+        )
+        return 2
+
+    workflow_path = (
+        Path(sys.argv[1])
+        if len(sys.argv) == 2
+        else WORKFLOW_PATH
+    )
+
+    errors = validate_workflow(workflow_path)
 
     if errors:
-        print(f"Workflow contract validation failed: {WORKFLOW_PATH}")
+        print(f"Workflow contract validation failed: {workflow_path}")
 
         for error in errors:
             print(f"ERROR: {error}")
 
         return 1
 
-    print(f"Workflow contract validation passed: {WORKFLOW_PATH}")
+    print(f"Workflow contract validation passed: {workflow_path}")
     return 0
 
 
