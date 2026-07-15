@@ -535,6 +535,98 @@ class WorkflowContractValidatorTests(unittest.TestCase):
             errors,
         )
 
+    def test_branch_condition_operator_mismatch_is_rejected(self) -> None:
+        workflow = copy.deepcopy(self.valid_workflow)
+
+        for node in workflow["nodes"]:
+            if node.get("id") == "phase1-if-status-ok":
+                condition = (
+                    node["parameters"]["conditions"]["conditions"][0]
+                )
+                condition["operator"]["operation"] = "notEquals"
+                break
+        else:
+            self.fail("phase1-if-status-ok was not found")
+
+        errors = self.validate_copy(workflow)
+
+        self.assertTrue(
+            any(
+                error.startswith(
+                    "branch condition contract mismatch for "
+                    "phase1-if-status-ok"
+                )
+                for error in errors
+            )
+        )
+
+    def test_branch_condition_value_mismatch_is_rejected(self) -> None:
+        workflow = copy.deepcopy(self.valid_workflow)
+
+        for node in workflow["nodes"]:
+            if node.get("id") == "phase1-validate-payload":
+                condition = (
+                    node["parameters"]["conditions"]["conditions"][0]
+                )
+                condition["rightValue"] = "unexpected"
+                break
+        else:
+            self.fail("phase1-validate-payload was not found")
+
+        errors = self.validate_copy(workflow)
+
+        self.assertTrue(
+            any(
+                error.startswith(
+                    "branch condition contract mismatch for "
+                    "phase1-validate-payload"
+                )
+                for error in errors
+            )
+        )
+
+    def test_branch_condition_combinator_mismatch_is_rejected(self) -> None:
+        workflow = copy.deepcopy(self.valid_workflow)
+
+        for node in workflow["nodes"]:
+            if node.get("id") == "phase1-if-status-ok":
+                node["parameters"]["conditions"]["combinator"] = "or"
+                break
+        else:
+            self.fail("phase1-if-status-ok was not found")
+
+        errors = self.validate_copy(workflow)
+
+        self.assertIn(
+            "branch condition combinator mismatch for "
+            "phase1-if-status-ok: expected 'and', found 'or'",
+            errors,
+        )
+
+    def test_branch_condition_options_mismatch_is_rejected(self) -> None:
+        workflow = copy.deepcopy(self.valid_workflow)
+
+        for node in workflow["nodes"]:
+            if node.get("id") == "phase1-validate-payload":
+                node["parameters"]["conditions"]["options"][
+                    "typeValidation"
+                ] = "loose"
+                break
+        else:
+            self.fail("phase1-validate-payload was not found")
+
+        errors = self.validate_copy(workflow)
+
+        self.assertTrue(
+            any(
+                error.startswith(
+                    "branch condition options mismatch for "
+                    "phase1-validate-payload"
+                )
+                for error in errors
+            )
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
