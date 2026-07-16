@@ -627,6 +627,30 @@ class WorkflowContractValidatorTests(unittest.TestCase):
             )
         )
 
+    def test_code_node_javascript_mismatch_is_rejected(self) -> None:
+        workflow = copy.deepcopy(self.valid_workflow)
+
+        for node in workflow["nodes"]:
+            if node.get("id") == "phase1-code-node":
+                node["parameters"]["jsCode"] = (
+                    "return items;"
+                )
+                break
+        else:
+            self.fail("phase1-code-node was not found")
+
+        errors = self.validate_copy(workflow)
+
+        self.assertTrue(
+            any(
+                error.startswith(
+                    "code node parameter contract mismatch for "
+                    "phase1-code-node"
+                )
+                for error in errors
+            )
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -152,6 +152,17 @@ REQUIRED_CONDITION_OPTIONS = {
     "version": 3,
 }
 
+REQUIRED_CODE_NODE_PARAMETERS = {
+    "phase1-code-node": {
+        "jsCode": (
+            "return items.map(item => {\n"
+            "  item.json.checkedBy = 'code-node';\n"
+            "  return item;\n"
+            "});"
+        ),
+    },
+}
+
 REQUIRED_RESPONSE_ASSIGNMENTS = {
     "phase1-build-success-response": [
         (
@@ -549,6 +560,22 @@ def validate_workflow(workflow_path: Path) -> list[str]:
                 f"branch condition options mismatch for {node_id}: "
                 f"expected {REQUIRED_CONDITION_OPTIONS!r}, "
                 f"found {condition_options!r}"
+            )
+
+    for node_id in sorted(REQUIRED_CODE_NODE_PARAMETERS):
+        node = nodes_by_id.get(node_id)
+
+        if node is None:
+            continue
+
+        actual_parameters = node.get("parameters")
+        expected_parameters = REQUIRED_CODE_NODE_PARAMETERS[node_id]
+
+        if actual_parameters != expected_parameters:
+            errors.append(
+                f"code node parameter contract mismatch for {node_id}: "
+                f"expected {expected_parameters!r}, "
+                f"found {actual_parameters!r}"
             )
 
     for node_id in sorted(REQUIRED_RESPONSE_ASSIGNMENTS):
