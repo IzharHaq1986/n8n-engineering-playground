@@ -687,6 +687,47 @@ class WorkflowContractValidatorTests(unittest.TestCase):
             errors,
         )
 
+    def test_edit_fields_options_mismatch_is_rejected(self) -> None:
+        workflow = copy.deepcopy(self.valid_workflow)
+
+        for node in workflow["nodes"]:
+            if node.get("id") == "edit-fields":
+                node["parameters"]["options"] = {
+                    "unexpected": True,
+                }
+                break
+        else:
+            self.fail("edit-fields was not found")
+
+        errors = self.validate_copy(workflow)
+
+        self.assertIn(
+            "set node options mismatch for edit-fields: "
+            "expected {}, found {'unexpected': True}",
+            errors,
+        )
+
+    def test_success_response_options_mismatch_is_rejected(self) -> None:
+        workflow = copy.deepcopy(self.valid_workflow)
+
+        for node in workflow["nodes"]:
+            if node.get("id") == "phase1-build-success-response":
+                node["parameters"]["options"] = {
+                    "unexpected": True,
+                }
+                break
+        else:
+            self.fail("phase1-build-success-response was not found")
+
+        errors = self.validate_copy(workflow)
+
+        self.assertIn(
+            "set node options mismatch for "
+            "phase1-build-success-response: "
+            "expected {}, found {'unexpected': True}",
+            errors,
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
