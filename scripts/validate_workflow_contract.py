@@ -117,6 +117,8 @@ REQUIRED_BRANCH_ASSIGNMENTS = {
 REQUIRED_INCLUDE_OTHER_FIELDS = {
     "phase1-mark-healthy": True,
     "phase1-mark-unhealthy": True,
+    "phase1-build-success-response": True,
+    "phase1-build-failure-response": True,
 }
 
 REQUIRED_BRANCH_CONDITIONS = {
@@ -493,20 +495,25 @@ def validate_workflow(workflow_path: Path) -> list[str]:
                 f"found {actual_assignments!r}"
             )
 
-        if node_id in REQUIRED_INCLUDE_OTHER_FIELDS:
-            actual_include_other_fields = (
-                node.get("parameters", {}).get("includeOtherFields")
-            )
-            expected_include_other_fields = (
-                REQUIRED_INCLUDE_OTHER_FIELDS[node_id]
-            )
+    for node_id in sorted(REQUIRED_INCLUDE_OTHER_FIELDS):
+        node = nodes_by_id.get(node_id)
 
-            if actual_include_other_fields != expected_include_other_fields:
-                errors.append(
-                    f"includeOtherFields mismatch for {node_id}: "
-                    f"expected {expected_include_other_fields!r}, "
-                    f"found {actual_include_other_fields!r}"
-                )
+        if node is None:
+            continue
+
+        actual_include_other_fields = (
+            node.get("parameters", {}).get("includeOtherFields")
+        )
+        expected_include_other_fields = (
+            REQUIRED_INCLUDE_OTHER_FIELDS[node_id]
+        )
+
+        if actual_include_other_fields != expected_include_other_fields:
+            errors.append(
+                f"includeOtherFields mismatch for {node_id}: "
+                f"expected {expected_include_other_fields!r}, "
+                f"found {actual_include_other_fields!r}"
+            )
 
     for node_id in sorted(REQUIRED_BRANCH_CONDITIONS):
         node = nodes_by_id.get(node_id)

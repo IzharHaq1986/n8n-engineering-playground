@@ -651,6 +651,42 @@ class WorkflowContractValidatorTests(unittest.TestCase):
             )
         )
 
+    def test_success_response_include_other_fields_is_required(self) -> None:
+        workflow = copy.deepcopy(self.valid_workflow)
+
+        for node in workflow["nodes"]:
+            if node.get("id") == "phase1-build-success-response":
+                node["parameters"]["includeOtherFields"] = False
+                break
+        else:
+            self.fail("phase1-build-success-response was not found")
+
+        errors = self.validate_copy(workflow)
+
+        self.assertIn(
+            "includeOtherFields mismatch for "
+            "phase1-build-success-response: expected True, found False",
+            errors,
+        )
+
+    def test_failure_response_include_other_fields_is_required(self) -> None:
+        workflow = copy.deepcopy(self.valid_workflow)
+
+        for node in workflow["nodes"]:
+            if node.get("id") == "phase1-build-failure-response":
+                node["parameters"]["includeOtherFields"] = False
+                break
+        else:
+            self.fail("phase1-build-failure-response was not found")
+
+        errors = self.validate_copy(workflow)
+
+        self.assertIn(
+            "includeOtherFields mismatch for "
+            "phase1-build-failure-response: expected True, found False",
+            errors,
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
