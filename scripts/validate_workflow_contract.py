@@ -165,6 +165,14 @@ REQUIRED_CODE_NODE_PARAMETERS = {
     },
 }
 
+REQUIRED_SET_NODE_OPTIONS = {
+    "edit-fields": {},
+    "phase1-mark-healthy": {},
+    "phase1-mark-unhealthy": {},
+    "phase1-build-success-response": {},
+    "phase1-build-failure-response": {},
+}
+
 REQUIRED_RESPONSE_ASSIGNMENTS = {
     "phase1-build-success-response": [
         (
@@ -583,6 +591,22 @@ def validate_workflow(workflow_path: Path) -> list[str]:
                 f"code node parameter contract mismatch for {node_id}: "
                 f"expected {expected_parameters!r}, "
                 f"found {actual_parameters!r}"
+            )
+
+    for node_id in sorted(REQUIRED_SET_NODE_OPTIONS):
+        node = nodes_by_id.get(node_id)
+
+        if node is None:
+            continue
+
+        actual_options = node.get("parameters", {}).get("options")
+        expected_options = REQUIRED_SET_NODE_OPTIONS[node_id]
+
+        if actual_options != expected_options:
+            errors.append(
+                f"set node options mismatch for {node_id}: "
+                f"expected {expected_options!r}, "
+                f"found {actual_options!r}"
             )
 
     for node_id in sorted(REQUIRED_RESPONSE_ASSIGNMENTS):
