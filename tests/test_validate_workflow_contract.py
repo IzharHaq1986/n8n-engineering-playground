@@ -200,6 +200,17 @@ class WorkflowContractValidatorTests(unittest.TestCase):
             errors,
         )
 
+    def test_active_workflow_is_rejected(self) -> None:
+        workflow = copy.deepcopy(self.valid_workflow)
+        workflow["active"] = True
+
+        errors = self.validate_copy(workflow)
+
+        self.assertIn(
+            "workflow active state must be False, found True",
+            errors,
+        )
+
     def test_invalid_workflow_setting_is_rejected(self) -> None:
         workflow = copy.deepcopy(self.valid_workflow)
         workflow["settings"]["executionOrder"] = "legacy"

@@ -358,6 +358,13 @@ def validate_workflow(workflow_path: Path) -> list[str]:
                 f"{field_name} must be {expected_type.__name__}"
             )
 
+    active = workflow.get("active")
+
+    if active is not False:
+        errors.append(
+            f"workflow active state must be False, found {active!r}"
+        )
+
     settings = workflow.get("settings")
 
     if isinstance(settings, dict):
