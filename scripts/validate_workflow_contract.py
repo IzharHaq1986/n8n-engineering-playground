@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Any
 
 WORKFLOW_PATH = Path("workflows/phase1/manual-health-check.json")
+EXPECTED_WORKFLOW_NAME = "Phase 1 - Manual Health Check"
 EXPECTED_VERSION_ID = "phase1-manual-health-check-v2"
 
 REQUIRED_NODE_IDS = {
@@ -398,6 +399,14 @@ def validate_workflow(workflow_path: Path) -> list[str]:
                     f"{setting_name}={expected_value!r}, "
                     f"found {actual_value!r}"
                 )
+
+    workflow_name = workflow.get("name")
+
+    if workflow_name != EXPECTED_WORKFLOW_NAME:
+        errors.append(
+            f"workflow name must be {EXPECTED_WORKFLOW_NAME!r}, "
+            f"found {workflow_name!r}"
+        )
 
     version_id = workflow.get("versionId")
     if version_id != EXPECTED_VERSION_ID:
