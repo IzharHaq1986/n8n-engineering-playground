@@ -200,6 +200,26 @@ class WorkflowContractValidatorTests(unittest.TestCase):
             errors,
         )
 
+    def test_non_empty_pin_data_is_rejected(self) -> None:
+        workflow = copy.deepcopy(self.valid_workflow)
+        workflow["pinData"] = {
+            "Manual Trigger": [
+                {
+                    "json": {
+                        "status": "pinned",
+                    }
+                }
+            ]
+        }
+
+        errors = self.validate_copy(workflow)
+
+        self.assertIn(
+            "workflow pinData must be empty, found "
+            "{'Manual Trigger': [{'json': {'status': 'pinned'}}]}",
+            errors,
+        )
+
     def test_active_workflow_is_rejected(self) -> None:
         workflow = copy.deepcopy(self.valid_workflow)
         workflow["active"] = True

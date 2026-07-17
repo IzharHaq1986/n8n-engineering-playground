@@ -358,6 +358,13 @@ def validate_workflow(workflow_path: Path) -> list[str]:
                 f"{field_name} must be {expected_type.__name__}"
             )
 
+    pin_data = workflow.get("pinData")
+
+    if isinstance(pin_data, dict) and pin_data:
+        errors.append(
+            f"workflow pinData must be empty, found {pin_data!r}"
+        )
+
     active = workflow.get("active")
 
     if active is not False:
