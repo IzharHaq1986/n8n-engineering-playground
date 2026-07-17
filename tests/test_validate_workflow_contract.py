@@ -254,6 +254,18 @@ class WorkflowContractValidatorTests(unittest.TestCase):
             errors,
         )
 
+    def test_workflow_name_mismatch_is_rejected(self) -> None:
+        workflow = copy.deepcopy(self.valid_workflow)
+        workflow["name"] = "Renamed Health Check"
+
+        errors = self.validate_copy(workflow)
+
+        self.assertIn(
+            "workflow name must be 'Phase 1 - Manual Health Check', "
+            "found 'Renamed Health Check'",
+            errors,
+        )
+
     def test_active_workflow_is_rejected(self) -> None:
         workflow = copy.deepcopy(self.valid_workflow)
         workflow["active"] = True
