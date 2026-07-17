@@ -365,6 +365,13 @@ def validate_workflow(workflow_path: Path) -> list[str]:
             f"workflow pinData must be empty, found {pin_data!r}"
         )
 
+    tags = workflow.get("tags")
+
+    if isinstance(tags, list) and tags:
+        errors.append(
+            f"workflow tags must be empty, found {tags!r}"
+        )
+
     active = workflow.get("active")
 
     if active is not False:

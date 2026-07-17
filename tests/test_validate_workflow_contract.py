@@ -220,6 +220,23 @@ class WorkflowContractValidatorTests(unittest.TestCase):
             errors,
         )
 
+    def test_non_empty_workflow_tags_are_rejected(self) -> None:
+        workflow = copy.deepcopy(self.valid_workflow)
+        workflow["tags"] = [
+            {
+                "id": "phase1-tag",
+                "name": "Phase 1",
+            }
+        ]
+
+        errors = self.validate_copy(workflow)
+
+        self.assertIn(
+            "workflow tags must be empty, found "
+            "[{'id': 'phase1-tag', 'name': 'Phase 1'}]",
+            errors,
+        )
+
     def test_active_workflow_is_rejected(self) -> None:
         workflow = copy.deepcopy(self.valid_workflow)
         workflow["active"] = True
