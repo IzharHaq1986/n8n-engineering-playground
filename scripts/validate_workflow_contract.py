@@ -87,6 +87,18 @@ REQUIRED_NODE_CONTRACTS = {
     ),
 }
 
+REQUIRED_NODE_POSITIONS = {
+    "manual-trigger": [0, 0],
+    "edit-fields": [208, 0],
+    "phase1-code-node": [416, 0],
+    "phase1-validate-payload": [64, -48],
+    "phase1-if-status-ok": [592, 0],
+    "phase1-mark-healthy": [240, -144],
+    "phase1-mark-unhealthy": [240, 48],
+    "phase1-build-success-response": [448, -144],
+    "phase1-build-failure-response": [448, 48],
+}
+
 REQUIRED_BRANCH_ASSIGNMENTS = {
     "edit-fields": [
         (
@@ -462,6 +474,22 @@ def validate_workflow(workflow_path: Path) -> list[str]:
                 f"node typeVersion mismatch for {node_id}: "
                 f"expected {expected_type_version!r}, "
                 f"found {actual_type_version!r}"
+            )
+
+    for node_id in sorted(REQUIRED_NODE_POSITIONS):
+        node = nodes_by_id.get(node_id)
+
+        if node is None:
+            continue
+
+        expected_position = REQUIRED_NODE_POSITIONS[node_id]
+        actual_position = node.get("position")
+
+        if actual_position != expected_position:
+            errors.append(
+                f"node position mismatch for {node_id}: "
+                f"expected {expected_position!r}, "
+                f"found {actual_position!r}"
             )
 
     for node_id in sorted(REQUIRED_BRANCH_ASSIGNMENTS):
