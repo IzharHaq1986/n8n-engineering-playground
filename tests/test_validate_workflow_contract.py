@@ -254,6 +254,17 @@ class WorkflowContractValidatorTests(unittest.TestCase):
             errors,
         )
 
+    def test_unexpected_workflow_key_is_rejected(self) -> None:
+        workflow = copy.deepcopy(self.valid_workflow)
+        workflow["unexpectedMetadata"] = True
+
+        errors = self.validate_copy(workflow)
+
+        self.assertIn(
+            "unexpected workflow field found: unexpectedMetadata",
+            errors,
+        )
+
     def test_workflow_name_mismatch_is_rejected(self) -> None:
         workflow = copy.deepcopy(self.valid_workflow)
         workflow["name"] = "Renamed Health Check"
