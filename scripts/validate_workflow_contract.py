@@ -372,6 +372,13 @@ def validate_workflow(workflow_path: Path) -> list[str]:
             f"workflow tags must be empty, found {tags!r}"
         )
 
+    node_groups = workflow.get("nodeGroups")
+
+    if isinstance(node_groups, list) and node_groups:
+        errors.append(
+            f"workflow nodeGroups must be empty, found {node_groups!r}"
+        )
+
     active = workflow.get("active")
 
     if active is not False:
