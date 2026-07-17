@@ -249,6 +249,24 @@ class WorkflowContractValidatorTests(unittest.TestCase):
             errors,
         )
 
+    def test_node_position_mismatch_is_rejected(self) -> None:
+        workflow = copy.deepcopy(self.valid_workflow)
+
+        for node in workflow["nodes"]:
+            if node.get("id") == "phase1-code-node":
+                node["position"] = [999, 999]
+                break
+        else:
+            self.fail("phase1-code-node was not found")
+
+        errors = self.validate_copy(workflow)
+
+        self.assertIn(
+            "node position mismatch for phase1-code-node: "
+            "expected [416, 0], found [999, 999]",
+            errors,
+        )
+
     def test_unexpected_connection_is_rejected(self) -> None:
         workflow = copy.deepcopy(self.valid_workflow)
         workflow["connections"]["Edit Fields"]["main"][0].append(
