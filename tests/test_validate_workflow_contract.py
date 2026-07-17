@@ -237,6 +237,23 @@ class WorkflowContractValidatorTests(unittest.TestCase):
             errors,
         )
 
+    def test_non_empty_node_groups_are_rejected(self) -> None:
+        workflow = copy.deepcopy(self.valid_workflow)
+        workflow["nodeGroups"] = [
+            {
+                "id": "phase1-group",
+                "name": "Phase 1 Nodes",
+            }
+        ]
+
+        errors = self.validate_copy(workflow)
+
+        self.assertIn(
+            "workflow nodeGroups must be empty, found "
+            "[{'id': 'phase1-group', 'name': 'Phase 1 Nodes'}]",
+            errors,
+        )
+
     def test_active_workflow_is_rejected(self) -> None:
         workflow = copy.deepcopy(self.valid_workflow)
         workflow["active"] = True
