@@ -12,6 +12,18 @@ WORKFLOW_PATH = Path("workflows/phase1/manual-health-check.json")
 EXPECTED_WORKFLOW_NAME = "Phase 1 - Manual Health Check"
 EXPECTED_VERSION_ID = "phase1-manual-health-check-v2"
 
+REQUIRED_WORKFLOW_FIELDS = {
+    "active",
+    "connections",
+    "name",
+    "nodeGroups",
+    "nodes",
+    "pinData",
+    "settings",
+    "tags",
+    "versionId",
+}
+
 REQUIRED_NODE_IDS = {
     "manual-trigger",
     "edit-fields",
@@ -343,6 +355,16 @@ def validate_workflow(workflow_path: Path) -> list[str]:
 
     if "id" in workflow:
         errors.append("workflow must not contain a top-level runtime id")
+
+    workflow_fields = set(workflow)
+    unexpected_workflow_fields = sorted(
+        workflow_fields - REQUIRED_WORKFLOW_FIELDS
+    )
+
+    for field_name in unexpected_workflow_fields:
+        errors.append(
+            f"unexpected workflow field found: {field_name}"
+        )
 
     for field_name, expected_type in REQUIRED_WORKFLOW_METADATA_TYPES.items():
         if field_name not in workflow:
