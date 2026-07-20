@@ -357,6 +357,16 @@ def validate_workflow(workflow_path: Path) -> list[str]:
         errors.append("workflow must not contain a top-level runtime id")
 
     workflow_fields = set(workflow)
+
+    missing_workflow_fields = sorted(
+        REQUIRED_WORKFLOW_FIELDS - workflow_fields
+    )
+
+    for field_name in missing_workflow_fields:
+        errors.append(
+            f"required workflow field is missing: {field_name}"
+        )
+
     unexpected_workflow_fields = sorted(
         workflow_fields - REQUIRED_WORKFLOW_FIELDS
     )

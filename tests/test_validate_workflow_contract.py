@@ -177,6 +177,17 @@ class WorkflowContractValidatorTests(unittest.TestCase):
             errors,
         )
 
+    def test_missing_required_workflow_field_is_rejected(self) -> None:
+        workflow = copy.deepcopy(self.valid_workflow)
+        del workflow["name"]
+
+        errors = self.validate_copy(workflow)
+
+        self.assertIn(
+            "required workflow field is missing: name",
+            errors,
+        )
+
     def test_missing_workflow_metadata_field_is_rejected(self) -> None:
         workflow = copy.deepcopy(self.valid_workflow)
         del workflow["pinData"]
