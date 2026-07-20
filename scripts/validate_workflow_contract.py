@@ -412,6 +412,15 @@ def validate_workflow(workflow_path: Path) -> list[str]:
     settings = workflow.get("settings")
 
     if isinstance(settings, dict):
+        unexpected_setting_names = sorted(
+            set(settings) - set(REQUIRED_SETTINGS)
+        )
+
+        for setting_name in unexpected_setting_names:
+            errors.append(
+                f"unexpected workflow setting found: {setting_name}"
+            )
+
         for setting_name, expected_value in REQUIRED_SETTINGS.items():
             actual_value = settings.get(setting_name)
 

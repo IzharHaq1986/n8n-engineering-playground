@@ -300,6 +300,17 @@ class WorkflowContractValidatorTests(unittest.TestCase):
             errors,
         )
 
+    def test_unexpected_workflow_setting_is_rejected(self) -> None:
+        workflow = copy.deepcopy(self.valid_workflow)
+        workflow["settings"]["unexpectedSetting"] = True
+
+        errors = self.validate_copy(workflow)
+
+        self.assertIn(
+            "unexpected workflow setting found: unexpectedSetting",
+            errors,
+        )
+
     def test_node_type_mismatch_is_rejected(self) -> None:
         workflow = copy.deepcopy(self.valid_workflow)
 
