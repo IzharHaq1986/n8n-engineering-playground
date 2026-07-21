@@ -199,6 +199,17 @@ class WorkflowContractValidatorTests(unittest.TestCase):
             errors,
         )
 
+    def test_non_list_workflow_nodes_are_rejected(self) -> None:
+        workflow = copy.deepcopy(self.valid_workflow)
+        workflow["nodes"] = {}
+
+        errors = self.validate_copy(workflow)
+
+        self.assertIn(
+            "workflow nodes must be a non-empty array",
+            errors,
+        )
+
     def test_missing_workflow_metadata_field_is_rejected(self) -> None:
         workflow = copy.deepcopy(self.valid_workflow)
         del workflow["pinData"]
