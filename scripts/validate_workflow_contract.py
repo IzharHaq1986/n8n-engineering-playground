@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 import json
 import sys
 from pathlib import Path
@@ -11,6 +12,36 @@ from typing import Any
 WORKFLOW_PATH = Path("workflows/phase1/manual-health-check.json")
 EXPECTED_WORKFLOW_NAME = "Phase 1 - Manual Health Check"
 EXPECTED_VERSION_ID = "phase1-manual-health-check-v2"
+
+
+@dataclass(frozen=True)
+class WorkflowContract:
+    """Deterministic repository workflow contract."""
+
+    workflow_name: str
+    version_id: str
+
+
+WORKFLOW_CONTRACTS = {
+    EXPECTED_WORKFLOW_NAME: WorkflowContract(
+        workflow_name=EXPECTED_WORKFLOW_NAME,
+        version_id=EXPECTED_VERSION_ID,
+    ),
+}
+
+
+def select_workflow_contract(
+    workflow: dict[str, Any],
+) -> WorkflowContract | None:
+    """Return the registered workflow contract."""
+
+    workflow_name = workflow.get("name")
+
+    if not isinstance(workflow_name, str):
+        return None
+
+    return WORKFLOW_CONTRACTS.get(workflow_name)
+
 
 REQUIRED_WORKFLOW_FIELDS = {
     "active",
