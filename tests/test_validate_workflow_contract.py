@@ -33,6 +33,7 @@ def load_validator_module() -> ModuleType:
         raise RuntimeError(f"Unable to load validator: {VALIDATOR_PATH}")
 
     module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module
     spec.loader.exec_module(module)
     return module
 
@@ -63,6 +64,30 @@ class WorkflowContractValidatorTests(unittest.TestCase):
         errors = VALIDATOR.validate_workflow(WORKFLOW_PATH)
 
         self.assertEqual([], errors)
+
+    def test_validator_supports_multiple_workflow_contracts(self) -> None:
+        self.assertTrue(
+            hasattr(VALIDATOR, "WORKFLOW_CONTRACTS"),
+            "validator must expose WORKFLOW_CONTRACTS",
+        )
+        self.assertTrue(
+            hasattr(VALIDATOR, "select_workflow_contract"),
+            "validator must expose select_workflow_contract",
+        )
+
+        contracts = VALIDATOR.WORKFLOW_CONTRACTS
+
+        self.assertIsInstance(contracts, dict)
+        self.assertIn("Phase 1 - Manual Health Check", contracts)
+
+        selected_contract = VALIDATOR.select_workflow_contract(
+            self.valid_workflow
+        )
+
+        self.assertIs(
+            contracts["Phase 1 - Manual Health Check"],
+            selected_contract,
+        )
 
     def test_missing_required_node_is_rejected(self) -> None:
         workflow = copy.deepcopy(self.valid_workflow)
