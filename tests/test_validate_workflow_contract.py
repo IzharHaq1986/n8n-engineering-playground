@@ -89,6 +89,54 @@ class WorkflowContractValidatorTests(unittest.TestCase):
             selected_contract,
         )
 
+    def test_validate_workflow_uses_selected_contract(self) -> None:
+        original_selector = VALIDATOR.select_workflow_contract
+        selected_workflows: list[dict[str, Any]] = []
+
+        def recording_selector(
+            workflow: dict[str, Any],
+        ) -> Any:
+            selected_workflows.append(workflow)
+            return original_selector(workflow)
+
+        VALIDATOR.select_workflow_contract = recording_selector
+
+        try:
+            errors = VALIDATOR.validate_workflow(WORKFLOW_PATH)
+        finally:
+            VALIDATOR.select_workflow_contract = original_selector
+
+        self.assertEqual([], errors)
+        self.assertEqual(1, len(selected_workflows))
+        self.assertEqual(
+            self.valid_workflow,
+            selected_workflows[0],
+        )
+
+    def test_validate_workflow_uses_selected_contract_metadata(
+        self,
+    ) -> None:
+        workflow = copy.deepcopy(self.valid_workflow)
+        workflow["name"] = "Temporary Workflow"
+        workflow["versionId"] = "temporary-workflow-v1"
+
+        temporary_contract = VALIDATOR.WorkflowContract(
+            workflow_name="Temporary Workflow",
+            version_id="temporary-workflow-v1",
+        )
+        original_contracts = VALIDATOR.WORKFLOW_CONTRACTS.copy()
+        VALIDATOR.WORKFLOW_CONTRACTS["Temporary Workflow"] = (
+            temporary_contract
+        )
+
+        try:
+            errors = self.validate_copy(workflow)
+        finally:
+            VALIDATOR.WORKFLOW_CONTRACTS.clear()
+            VALIDATOR.WORKFLOW_CONTRACTS.update(original_contracts)
+
+        self.assertEqual([], errors)
+
     def test_missing_required_node_is_rejected(self) -> None:
         workflow = copy.deepcopy(self.valid_workflow)
         workflow["nodes"] = [

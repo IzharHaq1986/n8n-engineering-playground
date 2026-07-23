@@ -37,10 +37,27 @@ def select_workflow_contract(
 
     workflow_name = workflow.get("name")
 
-    if not isinstance(workflow_name, str):
+    if isinstance(workflow_name, str):
+        contract = WORKFLOW_CONTRACTS.get(workflow_name)
+
+        if contract is not None:
+            return contract
+
+    version_id = workflow.get("versionId")
+
+    if not isinstance(version_id, str):
         return None
 
-    return WORKFLOW_CONTRACTS.get(workflow_name)
+    matching_contracts = [
+        contract
+        for contract in WORKFLOW_CONTRACTS.values()
+        if contract.version_id == version_id
+    ]
+
+    if len(matching_contracts) != 1:
+        return None
+
+    return matching_contracts[0]
 
 
 REQUIRED_WORKFLOW_FIELDS = {
@@ -384,6 +401,8 @@ def validate_workflow(workflow_path: Path) -> list[str]:
     if not isinstance(workflow, dict):
         return ["workflow root must be a JSON object"]
 
+    contract = select_workflow_contract(workflow)
+
     if "id" in workflow:
         errors.append("workflow must not contain a top-level runtime id")
 
@@ -473,19 +492,24 @@ def validate_workflow(workflow_path: Path) -> list[str]:
                 )
 
     workflow_name = workflow.get("name")
-
-    if workflow_name != EXPECTED_WORKFLOW_NAME:
-        errors.append(
-            f"workflow name must be {EXPECTED_WORKFLOW_NAME!r}, "
-            f"found {workflow_name!r}"
-        )
-
     version_id = workflow.get("versionId")
-    if version_id != EXPECTED_VERSION_ID:
+
+    if contract is None:
         errors.append(
-            "workflow versionId must be "
-            f"'{EXPECTED_VERSION_ID}', found {version_id!r}"
+            f"unsupported workflow contract: {workflow_name!r}"
         )
+    else:
+        if workflow_name != contract.workflow_name:
+            errors.append(
+                f"workflow name must be {contract.workflow_name!r}, "
+                f"found {workflow_name!r}"
+            )
+
+        if version_id != contract.version_id:
+            errors.append(
+                "workflow versionId must be "
+                f"'{contract.version_id}', found {version_id!r}"
+            )
 
     nodes = workflow.get("nodes")
     if not isinstance(nodes, list) or not nodes:
