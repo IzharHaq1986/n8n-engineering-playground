@@ -120,11 +120,18 @@ class WorkflowContractValidatorTests(unittest.TestCase):
         workflow["name"] = "Temporary Workflow"
         workflow["versionId"] = "temporary-workflow-v1"
 
+        original_contracts = VALIDATOR.WORKFLOW_CONTRACTS.copy()
+        phase1_contract = original_contracts[
+            "Phase 1 - Manual Health Check"
+        ]
+
         temporary_contract = VALIDATOR.WorkflowContract(
             workflow_name="Temporary Workflow",
             version_id="temporary-workflow-v1",
+            required_workflow_fields=(
+                phase1_contract.required_workflow_fields
+            ),
         )
-        original_contracts = VALIDATOR.WORKFLOW_CONTRACTS.copy()
         VALIDATOR.WORKFLOW_CONTRACTS["Temporary Workflow"] = (
             temporary_contract
         )
@@ -249,6 +256,38 @@ class WorkflowContractValidatorTests(unittest.TestCase):
             "duplicate parameter id: status-assignment",
             errors,
         )
+
+    def test_validate_workflow_uses_contract_required_workflow_fields(
+        self,
+    ) -> None:
+        workflow = copy.deepcopy(self.valid_workflow)
+        workflow["temporaryField"] = "temporary-value"
+
+        original_contract = VALIDATOR.WORKFLOW_CONTRACTS[
+            "Phase 1 - Manual Health Check"
+        ]
+
+        temporary_contract = VALIDATOR.WorkflowContract(
+            workflow_name=original_contract.workflow_name,
+            version_id=original_contract.version_id,
+            required_workflow_fields=(
+                original_contract.required_workflow_fields
+                | {"temporaryField"}
+            ),
+        )
+
+        VALIDATOR.WORKFLOW_CONTRACTS[
+            "Phase 1 - Manual Health Check"
+        ] = temporary_contract
+
+        try:
+            errors = self.validate_copy(workflow)
+        finally:
+            VALIDATOR.WORKFLOW_CONTRACTS[
+                "Phase 1 - Manual Health Check"
+            ] = original_contract
+
+        self.assertEqual([], errors)
 
     def test_missing_required_workflow_field_is_rejected(self) -> None:
         workflow = copy.deepcopy(self.valid_workflow)

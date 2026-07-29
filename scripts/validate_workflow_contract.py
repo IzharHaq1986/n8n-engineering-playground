@@ -13,6 +13,18 @@ WORKFLOW_PATH = Path("workflows/phase1/manual-health-check.json")
 EXPECTED_WORKFLOW_NAME = "Phase 1 - Manual Health Check"
 EXPECTED_VERSION_ID = "phase1-manual-health-check-v2"
 
+REQUIRED_WORKFLOW_FIELDS = {
+    "active",
+    "connections",
+    "name",
+    "nodeGroups",
+    "nodes",
+    "pinData",
+    "settings",
+    "tags",
+    "versionId",
+}
+
 
 @dataclass(frozen=True)
 class WorkflowContract:
@@ -20,12 +32,14 @@ class WorkflowContract:
 
     workflow_name: str
     version_id: str
+    required_workflow_fields: frozenset[str]
 
 
 WORKFLOW_CONTRACTS = {
     EXPECTED_WORKFLOW_NAME: WorkflowContract(
         workflow_name=EXPECTED_WORKFLOW_NAME,
         version_id=EXPECTED_VERSION_ID,
+        required_workflow_fields=frozenset(REQUIRED_WORKFLOW_FIELDS),
     ),
 }
 
@@ -59,18 +73,6 @@ def select_workflow_contract(
 
     return matching_contracts[0]
 
-
-REQUIRED_WORKFLOW_FIELDS = {
-    "active",
-    "connections",
-    "name",
-    "nodeGroups",
-    "nodes",
-    "pinData",
-    "settings",
-    "tags",
-    "versionId",
-}
 
 REQUIRED_NODE_IDS = {
     "manual-trigger",
@@ -407,9 +409,14 @@ def validate_workflow(workflow_path: Path) -> list[str]:
         errors.append("workflow must not contain a top-level runtime id")
 
     workflow_fields = set(workflow)
+    required_workflow_fields = (
+        contract.required_workflow_fields
+        if contract is not None
+        else frozenset(REQUIRED_WORKFLOW_FIELDS)
+    )
 
     missing_workflow_fields = sorted(
-        REQUIRED_WORKFLOW_FIELDS - workflow_fields
+        required_workflow_fields - workflow_fields
     )
 
     for field_name in missing_workflow_fields:
@@ -418,7 +425,7 @@ def validate_workflow(workflow_path: Path) -> list[str]:
         )
 
     unexpected_workflow_fields = sorted(
-        workflow_fields - REQUIRED_WORKFLOW_FIELDS
+        workflow_fields - required_workflow_fields
     )
 
     for field_name in unexpected_workflow_fields:
