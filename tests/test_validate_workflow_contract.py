@@ -135,6 +135,9 @@ class WorkflowContractValidatorTests(unittest.TestCase):
             required_node_contracts=(
                 phase1_contract.required_node_contracts
             ),
+            required_code_node_parameters=(
+                phase1_contract.required_code_node_parameters
+            ),
         )
         VALIDATOR.WORKFLOW_CONTRACTS["Temporary Workflow"] = (
             temporary_contract
@@ -168,6 +171,9 @@ class WorkflowContractValidatorTests(unittest.TestCase):
             required_node_contracts=(
                 original_contract.required_node_contracts
             ),
+            required_code_node_parameters=(
+                original_contract.required_code_node_parameters
+            ),
         )
 
         VALIDATOR.WORKFLOW_CONTRACTS[
@@ -184,6 +190,51 @@ class WorkflowContractValidatorTests(unittest.TestCase):
         self.assertIn(
             "unexpected node id found: phase1-code-node",
             errors,
+        )
+
+    def test_validate_workflow_uses_contract_required_code_node_parameters(
+        self,
+    ) -> None:
+        original_contract = VALIDATOR.WORKFLOW_CONTRACTS[
+            "Phase 1 - Manual Health Check"
+        ]
+
+        temporary_contract = VALIDATOR.WorkflowContract(
+            workflow_name=original_contract.workflow_name,
+            version_id=original_contract.version_id,
+            required_workflow_fields=(
+                original_contract.required_workflow_fields
+            ),
+            required_node_ids=original_contract.required_node_ids,
+            required_node_contracts=(
+                original_contract.required_node_contracts
+            ),
+            required_code_node_parameters={
+                "phase1-code-node": {
+                    "jsCode": "return items;",
+                },
+            },
+        )
+
+        VALIDATOR.WORKFLOW_CONTRACTS[
+            "Phase 1 - Manual Health Check"
+        ] = temporary_contract
+
+        try:
+            errors = self.validate_copy(self.valid_workflow)
+        finally:
+            VALIDATOR.WORKFLOW_CONTRACTS[
+                "Phase 1 - Manual Health Check"
+            ] = original_contract
+
+        self.assertTrue(
+            any(
+                error.startswith(
+                    "code node parameter contract mismatch for "
+                    "phase1-code-node"
+                )
+                for error in errors
+            )
         )
 
     def test_validate_workflow_uses_contract_required_node_contracts(
@@ -208,6 +259,9 @@ class WorkflowContractValidatorTests(unittest.TestCase):
                     2,
                 ),
             },
+            required_code_node_parameters=(
+                original_contract.required_code_node_parameters
+            ),
         )
 
         VALIDATOR.WORKFLOW_CONTRACTS[
@@ -361,6 +415,9 @@ class WorkflowContractValidatorTests(unittest.TestCase):
             required_node_ids=original_contract.required_node_ids,
             required_node_contracts=(
                 original_contract.required_node_contracts
+            ),
+            required_code_node_parameters=(
+                original_contract.required_code_node_parameters
             ),
         )
 

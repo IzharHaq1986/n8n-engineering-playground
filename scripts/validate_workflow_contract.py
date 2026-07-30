@@ -87,6 +87,18 @@ REQUIRED_NODE_CONTRACTS = {
     ),
 }
 
+REQUIRED_CODE_NODE_PARAMETERS = {
+    "phase1-code-node": {
+        "jsCode": (
+            "return items.map(item => {\n"
+            "  item.json.checkedBy = 'code-node';\n"
+            "  return item;\n"
+            "});"
+        ),
+    },
+}
+
+
 @dataclass(frozen=True)
 class WorkflowContract:
     """Deterministic repository workflow contract."""
@@ -99,6 +111,10 @@ class WorkflowContract:
         str,
         tuple[str, str, int | float],
     ]
+    required_code_node_parameters: dict[
+        str,
+        dict[str, Any],
+    ]
 
 
 WORKFLOW_CONTRACTS = {
@@ -108,6 +124,9 @@ WORKFLOW_CONTRACTS = {
         required_workflow_fields=frozenset(REQUIRED_WORKFLOW_FIELDS),
         required_node_ids=frozenset(REQUIRED_NODE_IDS),
         required_node_contracts=REQUIRED_NODE_CONTRACTS,
+        required_code_node_parameters=(
+            REQUIRED_CODE_NODE_PARAMETERS
+        ),
     ),
 }
 
@@ -235,17 +254,6 @@ REQUIRED_CONDITION_OPTIONS = {
     "leftValue": "",
     "typeValidation": "strict",
     "version": 3,
-}
-
-REQUIRED_CODE_NODE_PARAMETERS = {
-    "phase1-code-node": {
-        "jsCode": (
-            "return items.map(item => {\n"
-            "  item.json.checkedBy = 'code-node';\n"
-            "  return item;\n"
-            "});"
-        ),
-    },
 }
 
 REQUIRED_SET_NODE_OPTIONS = {
@@ -764,14 +772,20 @@ def validate_workflow(workflow_path: Path) -> list[str]:
                 f"found {condition_options!r}"
             )
 
-    for node_id in sorted(REQUIRED_CODE_NODE_PARAMETERS):
+    required_code_node_parameters = (
+        contract.required_code_node_parameters
+        if contract is not None
+        else REQUIRED_CODE_NODE_PARAMETERS
+    )
+
+    for node_id in sorted(required_code_node_parameters):
         node = nodes_by_id.get(node_id)
 
         if node is None:
             continue
 
         actual_parameters = node.get("parameters")
-        expected_parameters = REQUIRED_CODE_NODE_PARAMETERS[node_id]
+        expected_parameters = required_code_node_parameters[node_id]
 
         if actual_parameters != expected_parameters:
             errors.append(
