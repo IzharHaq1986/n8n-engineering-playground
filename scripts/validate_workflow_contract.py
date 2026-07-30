@@ -39,6 +39,54 @@ REQUIRED_NODE_IDS = {
 }
 
 
+REQUIRED_NODE_CONTRACTS = {
+    "manual-trigger": (
+        "Manual Trigger",
+        "n8n-nodes-base.manualTrigger",
+        1,
+    ),
+    "edit-fields": (
+        "Edit Fields",
+        "n8n-nodes-base.set",
+        3.4,
+    ),
+    "phase1-code-node": (
+        "Code in JavaScript",
+        "n8n-nodes-base.code",
+        2,
+    ),
+    "phase1-validate-payload": (
+        "Validate Payload",
+        "n8n-nodes-base.if",
+        2.3,
+    ),
+    "phase1-if-status-ok": (
+        "If",
+        "n8n-nodes-base.if",
+        2.3,
+    ),
+    "phase1-mark-healthy": (
+        "Mark Healthy",
+        "n8n-nodes-base.set",
+        3.4,
+    ),
+    "phase1-mark-unhealthy": (
+        "Mark Unhealthy",
+        "n8n-nodes-base.set",
+        3.4,
+    ),
+    "phase1-build-success-response": (
+        "Build Success Response",
+        "n8n-nodes-base.set",
+        3.4,
+    ),
+    "phase1-build-failure-response": (
+        "Build Failure Response",
+        "n8n-nodes-base.set",
+        3.4,
+    ),
+}
+
 @dataclass(frozen=True)
 class WorkflowContract:
     """Deterministic repository workflow contract."""
@@ -47,6 +95,10 @@ class WorkflowContract:
     version_id: str
     required_workflow_fields: frozenset[str]
     required_node_ids: frozenset[str]
+    required_node_contracts: dict[
+        str,
+        tuple[str, str, int | float],
+    ]
 
 
 WORKFLOW_CONTRACTS = {
@@ -55,6 +107,7 @@ WORKFLOW_CONTRACTS = {
         version_id=EXPECTED_VERSION_ID,
         required_workflow_fields=frozenset(REQUIRED_WORKFLOW_FIELDS),
         required_node_ids=frozenset(REQUIRED_NODE_IDS),
+        required_node_contracts=REQUIRED_NODE_CONTRACTS,
     ),
 }
 
@@ -103,54 +156,6 @@ REQUIRED_CONNECTIONS = {
     ("If", 1, "Mark Unhealthy", 0),
     ("Mark Healthy", 0, "Build Success Response", 0),
     ("Mark Unhealthy", 0, "Build Failure Response", 0),
-}
-
-REQUIRED_NODE_CONTRACTS = {
-    "manual-trigger": (
-        "Manual Trigger",
-        "n8n-nodes-base.manualTrigger",
-        1,
-    ),
-    "edit-fields": (
-        "Edit Fields",
-        "n8n-nodes-base.set",
-        3.4,
-    ),
-    "phase1-code-node": (
-        "Code in JavaScript",
-        "n8n-nodes-base.code",
-        2,
-    ),
-    "phase1-validate-payload": (
-        "Validate Payload",
-        "n8n-nodes-base.if",
-        2.3,
-    ),
-    "phase1-if-status-ok": (
-        "If",
-        "n8n-nodes-base.if",
-        2.3,
-    ),
-    "phase1-mark-healthy": (
-        "Mark Healthy",
-        "n8n-nodes-base.set",
-        3.4,
-    ),
-    "phase1-mark-unhealthy": (
-        "Mark Unhealthy",
-        "n8n-nodes-base.set",
-        3.4,
-    ),
-    "phase1-build-success-response": (
-        "Build Success Response",
-        "n8n-nodes-base.set",
-        3.4,
-    ),
-    "phase1-build-failure-response": (
-        "Build Failure Response",
-        "n8n-nodes-base.set",
-        3.4,
-    ),
 }
 
 REQUIRED_NODE_POSITIONS = {
@@ -589,7 +594,13 @@ def validate_workflow(workflow_path: Path) -> list[str]:
     for node_id in unexpected_node_ids:
         errors.append(f"unexpected node id found: {node_id}")
 
-    for node_id in sorted(REQUIRED_NODE_CONTRACTS):
+    required_node_contracts = (
+        contract.required_node_contracts
+        if contract is not None
+        else REQUIRED_NODE_CONTRACTS
+    )
+
+    for node_id in sorted(required_node_contracts):
         node = nodes_by_id.get(node_id)
 
         if node is None:
@@ -599,7 +610,7 @@ def validate_workflow(workflow_path: Path) -> list[str]:
             expected_name,
             expected_type,
             expected_type_version,
-        ) = REQUIRED_NODE_CONTRACTS[node_id]
+        ) = required_node_contracts[node_id]
 
         actual_name = node.get("name")
         actual_type = node.get("type")
