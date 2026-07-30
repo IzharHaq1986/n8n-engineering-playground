@@ -26,6 +26,19 @@ REQUIRED_WORKFLOW_FIELDS = {
 }
 
 
+REQUIRED_NODE_IDS = {
+    "manual-trigger",
+    "edit-fields",
+    "phase1-code-node",
+    "phase1-validate-payload",
+    "phase1-if-status-ok",
+    "phase1-mark-healthy",
+    "phase1-mark-unhealthy",
+    "phase1-build-success-response",
+    "phase1-build-failure-response",
+}
+
+
 @dataclass(frozen=True)
 class WorkflowContract:
     """Deterministic repository workflow contract."""
@@ -33,6 +46,7 @@ class WorkflowContract:
     workflow_name: str
     version_id: str
     required_workflow_fields: frozenset[str]
+    required_node_ids: frozenset[str]
 
 
 WORKFLOW_CONTRACTS = {
@@ -40,6 +54,7 @@ WORKFLOW_CONTRACTS = {
         workflow_name=EXPECTED_WORKFLOW_NAME,
         version_id=EXPECTED_VERSION_ID,
         required_workflow_fields=frozenset(REQUIRED_WORKFLOW_FIELDS),
+        required_node_ids=frozenset(REQUIRED_NODE_IDS),
     ),
 }
 
@@ -73,18 +88,6 @@ def select_workflow_contract(
 
     return matching_contracts[0]
 
-
-REQUIRED_NODE_IDS = {
-    "manual-trigger",
-    "edit-fields",
-    "phase1-code-node",
-    "phase1-validate-payload",
-    "phase1-if-status-ok",
-    "phase1-mark-healthy",
-    "phase1-mark-unhealthy",
-    "phase1-build-success-response",
-    "phase1-build-failure-response",
-}
 
 PROHIBITED_KEYS = {
     "instanceId",
@@ -570,13 +573,18 @@ def validate_workflow(workflow_path: Path) -> list[str]:
         errors.append(f"duplicate node name: {node_name}")
 
     node_id_set = set(node_ids)
+    required_node_ids = (
+        contract.required_node_ids
+        if contract is not None
+        else frozenset(REQUIRED_NODE_IDS)
+    )
 
-    missing_node_ids = sorted(REQUIRED_NODE_IDS - node_id_set)
+    missing_node_ids = sorted(required_node_ids - node_id_set)
 
     for node_id in missing_node_ids:
         errors.append(f"required node id is missing: {node_id}")
 
-    unexpected_node_ids = sorted(node_id_set - REQUIRED_NODE_IDS)
+    unexpected_node_ids = sorted(node_id_set - required_node_ids)
 
     for node_id in unexpected_node_ids:
         errors.append(f"unexpected node id found: {node_id}")

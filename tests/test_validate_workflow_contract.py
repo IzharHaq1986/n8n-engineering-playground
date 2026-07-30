@@ -131,6 +131,7 @@ class WorkflowContractValidatorTests(unittest.TestCase):
             required_workflow_fields=(
                 phase1_contract.required_workflow_fields
             ),
+            required_node_ids=phase1_contract.required_node_ids,
         )
         VALIDATOR.WORKFLOW_CONTRACTS["Temporary Workflow"] = (
             temporary_contract
@@ -143,6 +144,41 @@ class WorkflowContractValidatorTests(unittest.TestCase):
             VALIDATOR.WORKFLOW_CONTRACTS.update(original_contracts)
 
         self.assertEqual([], errors)
+
+    def test_validate_workflow_uses_contract_required_node_ids(
+        self,
+    ) -> None:
+        original_contract = VALIDATOR.WORKFLOW_CONTRACTS[
+            "Phase 1 - Manual Health Check"
+        ]
+
+        temporary_contract = VALIDATOR.WorkflowContract(
+            workflow_name=original_contract.workflow_name,
+            version_id=original_contract.version_id,
+            required_workflow_fields=(
+                original_contract.required_workflow_fields
+            ),
+            required_node_ids=(
+                original_contract.required_node_ids
+                - {"phase1-code-node"}
+            ),
+        )
+
+        VALIDATOR.WORKFLOW_CONTRACTS[
+            "Phase 1 - Manual Health Check"
+        ] = temporary_contract
+
+        try:
+            errors = self.validate_copy(self.valid_workflow)
+        finally:
+            VALIDATOR.WORKFLOW_CONTRACTS[
+                "Phase 1 - Manual Health Check"
+            ] = original_contract
+
+        self.assertIn(
+            "unexpected node id found: phase1-code-node",
+            errors,
+        )
 
     def test_missing_required_node_is_rejected(self) -> None:
         workflow = copy.deepcopy(self.valid_workflow)
@@ -274,6 +310,7 @@ class WorkflowContractValidatorTests(unittest.TestCase):
                 original_contract.required_workflow_fields
                 | {"temporaryField"}
             ),
+            required_node_ids=original_contract.required_node_ids,
         )
 
         VALIDATOR.WORKFLOW_CONTRACTS[
