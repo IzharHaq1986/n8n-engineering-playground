@@ -99,6 +99,18 @@ REQUIRED_CODE_NODE_PARAMETERS = {
 }
 
 
+REQUIRED_NODE_POSITIONS = {
+    "manual-trigger": [0, 0],
+    "edit-fields": [208, 0],
+    "phase1-code-node": [416, 0],
+    "phase1-validate-payload": [64, -48],
+    "phase1-if-status-ok": [592, 0],
+    "phase1-mark-healthy": [240, -144],
+    "phase1-mark-unhealthy": [240, 48],
+    "phase1-build-success-response": [448, -144],
+    "phase1-build-failure-response": [448, 48],
+}
+
 @dataclass(frozen=True)
 class WorkflowContract:
     """Deterministic repository workflow contract."""
@@ -115,6 +127,7 @@ class WorkflowContract:
         str,
         dict[str, Any],
     ]
+    required_node_positions: dict[str, list[int]]
 
 
 WORKFLOW_CONTRACTS = {
@@ -127,6 +140,7 @@ WORKFLOW_CONTRACTS = {
         required_code_node_parameters=(
             REQUIRED_CODE_NODE_PARAMETERS
         ),
+        required_node_positions=REQUIRED_NODE_POSITIONS,
     ),
 }
 
@@ -175,18 +189,6 @@ REQUIRED_CONNECTIONS = {
     ("If", 1, "Mark Unhealthy", 0),
     ("Mark Healthy", 0, "Build Success Response", 0),
     ("Mark Unhealthy", 0, "Build Failure Response", 0),
-}
-
-REQUIRED_NODE_POSITIONS = {
-    "manual-trigger": [0, 0],
-    "edit-fields": [208, 0],
-    "phase1-code-node": [416, 0],
-    "phase1-validate-payload": [64, -48],
-    "phase1-if-status-ok": [592, 0],
-    "phase1-mark-healthy": [240, -144],
-    "phase1-mark-unhealthy": [240, 48],
-    "phase1-build-success-response": [448, -144],
-    "phase1-build-failure-response": [448, 48],
 }
 
 REQUIRED_BRANCH_ASSIGNMENTS = {
@@ -643,13 +645,19 @@ def validate_workflow(workflow_path: Path) -> list[str]:
                 f"found {actual_type_version!r}"
             )
 
-    for node_id in sorted(REQUIRED_NODE_POSITIONS):
+    required_node_positions = (
+        contract.required_node_positions
+        if contract is not None
+        else REQUIRED_NODE_POSITIONS
+    )
+
+    for node_id in sorted(required_node_positions):
         node = nodes_by_id.get(node_id)
 
         if node is None:
             continue
 
-        expected_position = REQUIRED_NODE_POSITIONS[node_id]
+        expected_position = required_node_positions[node_id]
         actual_position = node.get("position")
 
         if actual_position != expected_position:
