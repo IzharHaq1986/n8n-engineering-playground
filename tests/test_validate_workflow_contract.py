@@ -147,6 +147,9 @@ class WorkflowContractValidatorTests(unittest.TestCase):
             required_branch_assignments=(
                 phase1_contract.required_branch_assignments
             ),
+            required_include_other_fields=(
+                phase1_contract.required_include_other_fields
+            ),
 )
         VALIDATOR.WORKFLOW_CONTRACTS["Temporary Workflow"] = (
             temporary_contract
@@ -192,6 +195,9 @@ class WorkflowContractValidatorTests(unittest.TestCase):
             required_branch_assignments=(
                 original_contract.required_branch_assignments
             ),
+            required_include_other_fields=(
+                original_contract.required_include_other_fields
+            ),
 )
 
         VALIDATOR.WORKFLOW_CONTRACTS[
@@ -207,6 +213,58 @@ class WorkflowContractValidatorTests(unittest.TestCase):
 
         self.assertIn(
             "unexpected node id found: phase1-code-node",
+            errors,
+        )
+
+    def test_validate_workflow_uses_contract_required_include_other_fields(
+        self,
+    ) -> None:
+        original_contract = VALIDATOR.WORKFLOW_CONTRACTS[
+            "Phase 1 - Manual Health Check"
+        ]
+
+        temporary_contract = VALIDATOR.WorkflowContract(
+            workflow_name=original_contract.workflow_name,
+            version_id=original_contract.version_id,
+            required_workflow_fields=(
+                original_contract.required_workflow_fields
+            ),
+            required_node_ids=original_contract.required_node_ids,
+            required_node_contracts=(
+                original_contract.required_node_contracts
+            ),
+            required_code_node_parameters=(
+                original_contract.required_code_node_parameters
+            ),
+            required_node_positions=(
+                original_contract.required_node_positions
+            ),
+            required_connections=(
+                original_contract.required_connections
+            ),
+            required_branch_assignments=(
+                original_contract.required_branch_assignments
+            ),
+            required_include_other_fields={
+                **VALIDATOR.REQUIRED_INCLUDE_OTHER_FIELDS,
+                "phase1-mark-healthy": False,
+            },
+        )
+
+        VALIDATOR.WORKFLOW_CONTRACTS[
+            "Phase 1 - Manual Health Check"
+        ] = temporary_contract
+
+        try:
+            errors = self.validate_copy(self.valid_workflow)
+        finally:
+            VALIDATOR.WORKFLOW_CONTRACTS[
+                "Phase 1 - Manual Health Check"
+            ] = original_contract
+
+        self.assertIn(
+            "includeOtherFields mismatch for "
+            "phase1-mark-healthy: expected False, found True",
             errors,
         )
 
@@ -247,7 +305,10 @@ class WorkflowContractValidatorTests(unittest.TestCase):
                     ),
                 ],
             },
-        )
+                    required_include_other_fields=(
+                original_contract.required_include_other_fields
+            ),
+)
 
         VALIDATOR.WORKFLOW_CONTRACTS[
             "Phase 1 - Manual Health Check"
@@ -299,6 +360,9 @@ class WorkflowContractValidatorTests(unittest.TestCase):
                     required_branch_assignments=(
                 original_contract.required_branch_assignments
             ),
+            required_include_other_fields=(
+                original_contract.required_include_other_fields
+            ),
 )
 
         VALIDATOR.WORKFLOW_CONTRACTS[
@@ -347,6 +411,9 @@ class WorkflowContractValidatorTests(unittest.TestCase):
             ),
             required_branch_assignments=(
                 original_contract.required_branch_assignments
+            ),
+            required_include_other_fields=(
+                original_contract.required_include_other_fields
             ),
 )
 
@@ -400,6 +467,9 @@ class WorkflowContractValidatorTests(unittest.TestCase):
             ),
             required_branch_assignments=(
                 original_contract.required_branch_assignments
+            ),
+            required_include_other_fields=(
+                original_contract.required_include_other_fields
             ),
 )
 
@@ -457,6 +527,9 @@ class WorkflowContractValidatorTests(unittest.TestCase):
             ),
             required_branch_assignments=(
                 original_contract.required_branch_assignments
+            ),
+            required_include_other_fields=(
+                original_contract.required_include_other_fields
             ),
 )
 
@@ -623,6 +696,9 @@ class WorkflowContractValidatorTests(unittest.TestCase):
             ),
             required_branch_assignments=(
                 original_contract.required_branch_assignments
+            ),
+            required_include_other_fields=(
+                original_contract.required_include_other_fields
             ),
 )
 

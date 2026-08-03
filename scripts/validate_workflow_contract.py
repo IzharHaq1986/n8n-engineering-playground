@@ -149,6 +149,13 @@ REQUIRED_BRANCH_ASSIGNMENTS = {
     ],
 }
 
+REQUIRED_INCLUDE_OTHER_FIELDS = {
+    "phase1-mark-healthy": True,
+    "phase1-mark-unhealthy": True,
+    "phase1-build-success-response": True,
+    "phase1-build-failure-response": True,
+}
+
 @dataclass(frozen=True)
 class WorkflowContract:
     """Deterministic repository workflow contract."""
@@ -173,6 +180,7 @@ class WorkflowContract:
         str,
         list[tuple[str, str, str, str]],
     ]
+    required_include_other_fields: dict[str, bool]
 
 
 WORKFLOW_CONTRACTS = {
@@ -188,6 +196,7 @@ WORKFLOW_CONTRACTS = {
         required_node_positions=REQUIRED_NODE_POSITIONS,
         required_connections=REQUIRED_CONNECTIONS,
         required_branch_assignments=REQUIRED_BRANCH_ASSIGNMENTS,
+        required_include_other_fields=REQUIRED_INCLUDE_OTHER_FIELDS,
     ),
 }
 
@@ -225,13 +234,6 @@ def select_workflow_contract(
 PROHIBITED_KEYS = {
     "instanceId",
     "webhookId",
-}
-
-REQUIRED_INCLUDE_OTHER_FIELDS = {
-    "phase1-mark-healthy": True,
-    "phase1-mark-unhealthy": True,
-    "phase1-build-success-response": True,
-    "phase1-build-failure-response": True,
 }
 
 REQUIRED_BRANCH_CONDITIONS = {
@@ -721,7 +723,13 @@ def validate_workflow(workflow_path: Path) -> list[str]:
                 f"found {actual_assignments!r}"
             )
 
-    for node_id in sorted(REQUIRED_INCLUDE_OTHER_FIELDS):
+    required_include_other_fields = (
+        contract.required_include_other_fields
+        if contract is not None
+        else REQUIRED_INCLUDE_OTHER_FIELDS
+    )
+
+    for node_id in sorted(required_include_other_fields):
         node = nodes_by_id.get(node_id)
 
         if node is None:
@@ -731,7 +739,7 @@ def validate_workflow(workflow_path: Path) -> list[str]:
             node.get("parameters", {}).get("includeOtherFields")
         )
         expected_include_other_fields = (
-            REQUIRED_INCLUDE_OTHER_FIELDS[node_id]
+            required_include_other_fields[node_id]
         )
 
         if actual_include_other_fields != expected_include_other_fields:
