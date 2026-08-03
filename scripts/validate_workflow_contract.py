@@ -122,6 +122,33 @@ REQUIRED_CONNECTIONS = {
     ("Mark Unhealthy", 0, "Build Failure Response", 0),
 }
 
+REQUIRED_BRANCH_ASSIGNMENTS = {
+    "edit-fields": [
+        (
+            "status-assignment",
+            "status",
+            "ok",
+            "string",
+        ),
+    ],
+    "phase1-mark-healthy": [
+        (
+            "health-check-result-passed-assignment",
+            "healthCheckResult",
+            "passed",
+            "string",
+        ),
+    ],
+    "phase1-mark-unhealthy": [
+        (
+            "health-check-result-failed-assignment",
+            "healthCheckResult",
+            "failed",
+            "string",
+        ),
+    ],
+}
+
 @dataclass(frozen=True)
 class WorkflowContract:
     """Deterministic repository workflow contract."""
@@ -142,6 +169,10 @@ class WorkflowContract:
     required_connections: set[
         tuple[str, int, str, int]
     ]
+    required_branch_assignments: dict[
+        str,
+        list[tuple[str, str, str, str]],
+    ]
 
 
 WORKFLOW_CONTRACTS = {
@@ -156,6 +187,7 @@ WORKFLOW_CONTRACTS = {
         ),
         required_node_positions=REQUIRED_NODE_POSITIONS,
         required_connections=REQUIRED_CONNECTIONS,
+        required_branch_assignments=REQUIRED_BRANCH_ASSIGNMENTS,
     ),
 }
 
@@ -193,33 +225,6 @@ def select_workflow_contract(
 PROHIBITED_KEYS = {
     "instanceId",
     "webhookId",
-}
-
-REQUIRED_BRANCH_ASSIGNMENTS = {
-    "edit-fields": [
-        (
-            "status-assignment",
-            "status",
-            "ok",
-            "string",
-        ),
-    ],
-    "phase1-mark-healthy": [
-        (
-            "health-check-result-passed-assignment",
-            "healthCheckResult",
-            "passed",
-            "string",
-        ),
-    ],
-    "phase1-mark-unhealthy": [
-        (
-            "health-check-result-failed-assignment",
-            "healthCheckResult",
-            "failed",
-            "string",
-        ),
-    ],
 }
 
 REQUIRED_INCLUDE_OTHER_FIELDS = {
@@ -671,7 +676,13 @@ def validate_workflow(workflow_path: Path) -> list[str]:
                 f"found {actual_position!r}"
             )
 
-    for node_id in sorted(REQUIRED_BRANCH_ASSIGNMENTS):
+    required_branch_assignments = (
+        contract.required_branch_assignments
+        if contract is not None
+        else REQUIRED_BRANCH_ASSIGNMENTS
+    )
+
+    for node_id in sorted(required_branch_assignments):
         node = nodes_by_id.get(node_id)
 
         if node is None:
@@ -683,7 +694,7 @@ def validate_workflow(workflow_path: Path) -> list[str]:
             .get("assignments")
         )
 
-        expected_assignments = REQUIRED_BRANCH_ASSIGNMENTS[node_id]
+        expected_assignments = required_branch_assignments[node_id]
 
         if not isinstance(assignments, list):
             errors.append(
