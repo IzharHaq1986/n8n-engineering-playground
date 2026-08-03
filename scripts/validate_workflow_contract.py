@@ -182,6 +182,13 @@ REQUIRED_BRANCH_CONDITIONS = {
     ],
 }
 
+REQUIRED_CONDITION_OPTIONS = {
+    "caseSensitive": True,
+    "leftValue": "",
+    "typeValidation": "strict",
+    "version": 3,
+}
+
 @dataclass(frozen=True)
 class WorkflowContract:
     """Deterministic repository workflow contract."""
@@ -211,6 +218,7 @@ class WorkflowContract:
         str,
         list[tuple[str, str, dict[str, Any], str]],
     ]
+    required_condition_options: dict[str, Any]
 
 
 WORKFLOW_CONTRACTS = {
@@ -228,6 +236,7 @@ WORKFLOW_CONTRACTS = {
         required_branch_assignments=REQUIRED_BRANCH_ASSIGNMENTS,
         required_include_other_fields=REQUIRED_INCLUDE_OTHER_FIELDS,
         required_branch_conditions=REQUIRED_BRANCH_CONDITIONS,
+        required_condition_options=REQUIRED_CONDITION_OPTIONS,
     ),
 }
 
@@ -265,13 +274,6 @@ def select_workflow_contract(
 PROHIBITED_KEYS = {
     "instanceId",
     "webhookId",
-}
-
-REQUIRED_CONDITION_OPTIONS = {
-    "caseSensitive": True,
-    "leftValue": "",
-    "typeValidation": "strict",
-    "version": 3,
 }
 
 REQUIRED_SET_NODE_OPTIONS = {
@@ -807,10 +809,16 @@ def validate_workflow(workflow_path: Path) -> list[str]:
                 f"expected 'and', found {combinator!r}"
             )
 
-        if condition_options != REQUIRED_CONDITION_OPTIONS:
+        required_condition_options = (
+            contract.required_condition_options
+            if contract is not None
+            else REQUIRED_CONDITION_OPTIONS
+        )
+
+        if condition_options != required_condition_options:
             errors.append(
                 f"branch condition options mismatch for {node_id}: "
-                f"expected {REQUIRED_CONDITION_OPTIONS!r}, "
+                f"expected {required_condition_options!r}, "
                 f"found {condition_options!r}"
             )
 
