@@ -111,6 +111,17 @@ REQUIRED_NODE_POSITIONS = {
     "phase1-build-failure-response": [448, 48],
 }
 
+REQUIRED_CONNECTIONS = {
+    ("Manual Trigger", 0, "Edit Fields", 0),
+    ("Edit Fields", 0, "Code in JavaScript", 0),
+    ("Code in JavaScript", 0, "Validate Payload", 0),
+    ("Validate Payload", 0, "If", 0),
+    ("If", 0, "Mark Healthy", 0),
+    ("If", 1, "Mark Unhealthy", 0),
+    ("Mark Healthy", 0, "Build Success Response", 0),
+    ("Mark Unhealthy", 0, "Build Failure Response", 0),
+}
+
 @dataclass(frozen=True)
 class WorkflowContract:
     """Deterministic repository workflow contract."""
@@ -128,6 +139,9 @@ class WorkflowContract:
         dict[str, Any],
     ]
     required_node_positions: dict[str, list[int]]
+    required_connections: set[
+        tuple[str, int, str, int]
+    ]
 
 
 WORKFLOW_CONTRACTS = {
@@ -141,6 +155,7 @@ WORKFLOW_CONTRACTS = {
             REQUIRED_CODE_NODE_PARAMETERS
         ),
         required_node_positions=REQUIRED_NODE_POSITIONS,
+        required_connections=REQUIRED_CONNECTIONS,
     ),
 }
 
@@ -178,17 +193,6 @@ def select_workflow_contract(
 PROHIBITED_KEYS = {
     "instanceId",
     "webhookId",
-}
-
-REQUIRED_CONNECTIONS = {
-    ("Manual Trigger", 0, "Edit Fields", 0),
-    ("Edit Fields", 0, "Code in JavaScript", 0),
-    ("Code in JavaScript", 0, "Validate Payload", 0),
-    ("Validate Payload", 0, "If", 0),
-    ("If", 0, "Mark Healthy", 0),
-    ("If", 1, "Mark Unhealthy", 0),
-    ("Mark Healthy", 0, "Build Success Response", 0),
-    ("Mark Unhealthy", 0, "Build Failure Response", 0),
 }
 
 REQUIRED_BRANCH_ASSIGNMENTS = {
@@ -950,7 +954,13 @@ def validate_workflow(workflow_path: Path) -> list[str]:
                             )
                         )
 
-        for connection in sorted(REQUIRED_CONNECTIONS - actual_connections):
+        required_connections = (
+            contract.required_connections
+            if contract is not None
+            else REQUIRED_CONNECTIONS
+        )
+
+        for connection in sorted(required_connections - actual_connections):
             source_name, output_index, target_name, target_input = connection
             errors.append(
                 "required connection is missing: "
@@ -958,7 +968,7 @@ def validate_workflow(workflow_path: Path) -> list[str]:
                 f"{target_name}[{target_input}]"
             )
 
-        for connection in sorted(actual_connections - REQUIRED_CONNECTIONS):
+        for connection in sorted(actual_connections - required_connections):
             source_name, output_index, target_name, target_input = connection
             errors.append(
                 "unexpected connection found: "
