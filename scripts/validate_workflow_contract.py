@@ -156,6 +156,32 @@ REQUIRED_INCLUDE_OTHER_FIELDS = {
     "phase1-build-failure-response": True,
 }
 
+REQUIRED_BRANCH_CONDITIONS = {
+    "phase1-if-status-ok": [
+        (
+            "if-status-ok-condition",
+            "={{ $json.status }}",
+            {
+                "operation": "equals",
+                "type": "string",
+            },
+            "ok",
+        ),
+    ],
+    "phase1-validate-payload": [
+        (
+            "validate-payload-status-present-condition",
+            "={{ $json.status }}",
+            {
+                "operation": "notEmpty",
+                "singleValue": True,
+                "type": "string",
+            },
+            "",
+        ),
+    ],
+}
+
 @dataclass(frozen=True)
 class WorkflowContract:
     """Deterministic repository workflow contract."""
@@ -181,6 +207,10 @@ class WorkflowContract:
         list[tuple[str, str, str, str]],
     ]
     required_include_other_fields: dict[str, bool]
+    required_branch_conditions: dict[
+        str,
+        list[tuple[str, str, dict[str, Any], str]],
+    ]
 
 
 WORKFLOW_CONTRACTS = {
@@ -197,6 +227,7 @@ WORKFLOW_CONTRACTS = {
         required_connections=REQUIRED_CONNECTIONS,
         required_branch_assignments=REQUIRED_BRANCH_ASSIGNMENTS,
         required_include_other_fields=REQUIRED_INCLUDE_OTHER_FIELDS,
+        required_branch_conditions=REQUIRED_BRANCH_CONDITIONS,
     ),
 }
 
@@ -234,32 +265,6 @@ def select_workflow_contract(
 PROHIBITED_KEYS = {
     "instanceId",
     "webhookId",
-}
-
-REQUIRED_BRANCH_CONDITIONS = {
-    "phase1-if-status-ok": [
-        (
-            "if-status-ok-condition",
-            "={{ $json.status }}",
-            {
-                "operation": "equals",
-                "type": "string",
-            },
-            "ok",
-        ),
-    ],
-    "phase1-validate-payload": [
-        (
-            "validate-payload-status-present-condition",
-            "={{ $json.status }}",
-            {
-                "operation": "notEmpty",
-                "singleValue": True,
-                "type": "string",
-            },
-            "",
-        ),
-    ],
 }
 
 REQUIRED_CONDITION_OPTIONS = {
@@ -749,7 +754,13 @@ def validate_workflow(workflow_path: Path) -> list[str]:
                 f"found {actual_include_other_fields!r}"
             )
 
-    for node_id in sorted(REQUIRED_BRANCH_CONDITIONS):
+    required_branch_conditions = (
+        contract.required_branch_conditions
+        if contract is not None
+        else REQUIRED_BRANCH_CONDITIONS
+    )
+
+    for node_id in sorted(required_branch_conditions):
         node = nodes_by_id.get(node_id)
 
         if node is None:
@@ -763,7 +774,7 @@ def validate_workflow(workflow_path: Path) -> list[str]:
         combinator = condition_container.get("combinator")
         condition_options = condition_container.get("options")
 
-        expected_conditions = REQUIRED_BRANCH_CONDITIONS[node_id]
+        expected_conditions = required_branch_conditions[node_id]
 
         if not isinstance(conditions, list):
             errors.append(
