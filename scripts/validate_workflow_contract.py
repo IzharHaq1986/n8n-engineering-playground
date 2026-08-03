@@ -189,6 +189,14 @@ REQUIRED_CONDITION_OPTIONS = {
     "version": 3,
 }
 
+REQUIRED_SET_NODE_OPTIONS = {
+    "edit-fields": {},
+    "phase1-mark-healthy": {},
+    "phase1-mark-unhealthy": {},
+    "phase1-build-success-response": {},
+    "phase1-build-failure-response": {},
+}
+
 @dataclass(frozen=True)
 class WorkflowContract:
     """Deterministic repository workflow contract."""
@@ -219,6 +227,7 @@ class WorkflowContract:
         list[tuple[str, str, dict[str, Any], str]],
     ]
     required_condition_options: dict[str, Any]
+    required_set_node_options: dict[str, dict[str, Any]]
 
 
 WORKFLOW_CONTRACTS = {
@@ -237,6 +246,7 @@ WORKFLOW_CONTRACTS = {
         required_include_other_fields=REQUIRED_INCLUDE_OTHER_FIELDS,
         required_branch_conditions=REQUIRED_BRANCH_CONDITIONS,
         required_condition_options=REQUIRED_CONDITION_OPTIONS,
+        required_set_node_options=REQUIRED_SET_NODE_OPTIONS,
     ),
 }
 
@@ -274,14 +284,6 @@ def select_workflow_contract(
 PROHIBITED_KEYS = {
     "instanceId",
     "webhookId",
-}
-
-REQUIRED_SET_NODE_OPTIONS = {
-    "edit-fields": {},
-    "phase1-mark-healthy": {},
-    "phase1-mark-unhealthy": {},
-    "phase1-build-success-response": {},
-    "phase1-build-failure-response": {},
 }
 
 REQUIRED_RESPONSE_ASSIGNMENTS = {
@@ -844,14 +846,20 @@ def validate_workflow(workflow_path: Path) -> list[str]:
                 f"found {actual_parameters!r}"
             )
 
-    for node_id in sorted(REQUIRED_SET_NODE_OPTIONS):
+    required_set_node_options = (
+        contract.required_set_node_options
+        if contract is not None
+        else REQUIRED_SET_NODE_OPTIONS
+    )
+
+    for node_id in sorted(required_set_node_options):
         node = nodes_by_id.get(node_id)
 
         if node is None:
             continue
 
         actual_options = node.get("parameters", {}).get("options")
-        expected_options = REQUIRED_SET_NODE_OPTIONS[node_id]
+        expected_options = required_set_node_options[node_id]
 
         if actual_options != expected_options:
             errors.append(
