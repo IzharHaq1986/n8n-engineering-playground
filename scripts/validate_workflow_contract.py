@@ -197,95 +197,6 @@ REQUIRED_SET_NODE_OPTIONS = {
     "phase1-build-failure-response": {},
 }
 
-@dataclass(frozen=True)
-class WorkflowContract:
-    """Deterministic repository workflow contract."""
-
-    workflow_name: str
-    version_id: str
-    required_workflow_fields: frozenset[str]
-    required_node_ids: frozenset[str]
-    required_node_contracts: dict[
-        str,
-        tuple[str, str, int | float],
-    ]
-    required_code_node_parameters: dict[
-        str,
-        dict[str, Any],
-    ]
-    required_node_positions: dict[str, list[int]]
-    required_connections: set[
-        tuple[str, int, str, int]
-    ]
-    required_branch_assignments: dict[
-        str,
-        list[tuple[str, str, str, str]],
-    ]
-    required_include_other_fields: dict[str, bool]
-    required_branch_conditions: dict[
-        str,
-        list[tuple[str, str, dict[str, Any], str]],
-    ]
-    required_condition_options: dict[str, Any]
-    required_set_node_options: dict[str, dict[str, Any]]
-
-
-WORKFLOW_CONTRACTS = {
-    EXPECTED_WORKFLOW_NAME: WorkflowContract(
-        workflow_name=EXPECTED_WORKFLOW_NAME,
-        version_id=EXPECTED_VERSION_ID,
-        required_workflow_fields=frozenset(REQUIRED_WORKFLOW_FIELDS),
-        required_node_ids=frozenset(REQUIRED_NODE_IDS),
-        required_node_contracts=REQUIRED_NODE_CONTRACTS,
-        required_code_node_parameters=(
-            REQUIRED_CODE_NODE_PARAMETERS
-        ),
-        required_node_positions=REQUIRED_NODE_POSITIONS,
-        required_connections=REQUIRED_CONNECTIONS,
-        required_branch_assignments=REQUIRED_BRANCH_ASSIGNMENTS,
-        required_include_other_fields=REQUIRED_INCLUDE_OTHER_FIELDS,
-        required_branch_conditions=REQUIRED_BRANCH_CONDITIONS,
-        required_condition_options=REQUIRED_CONDITION_OPTIONS,
-        required_set_node_options=REQUIRED_SET_NODE_OPTIONS,
-    ),
-}
-
-
-def select_workflow_contract(
-    workflow: dict[str, Any],
-) -> WorkflowContract | None:
-    """Return the registered workflow contract."""
-
-    workflow_name = workflow.get("name")
-
-    if isinstance(workflow_name, str):
-        contract = WORKFLOW_CONTRACTS.get(workflow_name)
-
-        if contract is not None:
-            return contract
-
-    version_id = workflow.get("versionId")
-
-    if not isinstance(version_id, str):
-        return None
-
-    matching_contracts = [
-        contract
-        for contract in WORKFLOW_CONTRACTS.values()
-        if contract.version_id == version_id
-    ]
-
-    if len(matching_contracts) != 1:
-        return None
-
-    return matching_contracts[0]
-
-
-PROHIBITED_KEYS = {
-    "instanceId",
-    "webhookId",
-}
-
 REQUIRED_RESPONSE_ASSIGNMENTS = {
     "phase1-build-success-response": [
         (
@@ -351,6 +262,100 @@ REQUIRED_RESPONSE_ASSIGNMENTS = {
             "string",
         ),
     ],
+}
+
+@dataclass(frozen=True)
+class WorkflowContract:
+    """Deterministic repository workflow contract."""
+
+    workflow_name: str
+    version_id: str
+    required_workflow_fields: frozenset[str]
+    required_node_ids: frozenset[str]
+    required_node_contracts: dict[
+        str,
+        tuple[str, str, int | float],
+    ]
+    required_code_node_parameters: dict[
+        str,
+        dict[str, Any],
+    ]
+    required_node_positions: dict[str, list[int]]
+    required_connections: set[
+        tuple[str, int, str, int]
+    ]
+    required_branch_assignments: dict[
+        str,
+        list[tuple[str, str, str, str]],
+    ]
+    required_include_other_fields: dict[str, bool]
+    required_branch_conditions: dict[
+        str,
+        list[tuple[str, str, dict[str, Any], str]],
+    ]
+    required_condition_options: dict[str, Any]
+    required_set_node_options: dict[str, dict[str, Any]]
+    required_response_assignments: dict[
+        str,
+        list[tuple[str, str, str, str]],
+    ]
+
+
+WORKFLOW_CONTRACTS = {
+    EXPECTED_WORKFLOW_NAME: WorkflowContract(
+        workflow_name=EXPECTED_WORKFLOW_NAME,
+        version_id=EXPECTED_VERSION_ID,
+        required_workflow_fields=frozenset(REQUIRED_WORKFLOW_FIELDS),
+        required_node_ids=frozenset(REQUIRED_NODE_IDS),
+        required_node_contracts=REQUIRED_NODE_CONTRACTS,
+        required_code_node_parameters=(
+            REQUIRED_CODE_NODE_PARAMETERS
+        ),
+        required_node_positions=REQUIRED_NODE_POSITIONS,
+        required_connections=REQUIRED_CONNECTIONS,
+        required_branch_assignments=REQUIRED_BRANCH_ASSIGNMENTS,
+        required_include_other_fields=REQUIRED_INCLUDE_OTHER_FIELDS,
+        required_branch_conditions=REQUIRED_BRANCH_CONDITIONS,
+        required_condition_options=REQUIRED_CONDITION_OPTIONS,
+        required_set_node_options=REQUIRED_SET_NODE_OPTIONS,
+        required_response_assignments=REQUIRED_RESPONSE_ASSIGNMENTS,
+    ),
+}
+
+
+def select_workflow_contract(
+    workflow: dict[str, Any],
+) -> WorkflowContract | None:
+    """Return the registered workflow contract."""
+
+    workflow_name = workflow.get("name")
+
+    if isinstance(workflow_name, str):
+        contract = WORKFLOW_CONTRACTS.get(workflow_name)
+
+        if contract is not None:
+            return contract
+
+    version_id = workflow.get("versionId")
+
+    if not isinstance(version_id, str):
+        return None
+
+    matching_contracts = [
+        contract
+        for contract in WORKFLOW_CONTRACTS.values()
+        if contract.version_id == version_id
+    ]
+
+    if len(matching_contracts) != 1:
+        return None
+
+    return matching_contracts[0]
+
+
+PROHIBITED_KEYS = {
+    "instanceId",
+    "webhookId",
 }
 
 REQUIRED_WORKFLOW_METADATA_TYPES = {
@@ -868,7 +873,13 @@ def validate_workflow(workflow_path: Path) -> list[str]:
                 f"found {actual_options!r}"
             )
 
-    for node_id in sorted(REQUIRED_RESPONSE_ASSIGNMENTS):
+    required_response_assignments = (
+        contract.required_response_assignments
+        if contract is not None
+        else REQUIRED_RESPONSE_ASSIGNMENTS
+    )
+
+    for node_id in sorted(required_response_assignments):
         node = nodes_by_id.get(node_id)
 
         if node is None:
@@ -880,7 +891,7 @@ def validate_workflow(workflow_path: Path) -> list[str]:
             .get("assignments")
         )
 
-        expected_assignments = REQUIRED_RESPONSE_ASSIGNMENTS[node_id]
+        expected_assignments = required_response_assignments[node_id]
 
         if not isinstance(assignments, list):
             errors.append(
