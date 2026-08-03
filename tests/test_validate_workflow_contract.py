@@ -141,7 +141,10 @@ class WorkflowContractValidatorTests(unittest.TestCase):
             required_node_positions=(
                 phase1_contract.required_node_positions
             ),
-        )
+                    required_connections=(
+                phase1_contract.required_connections
+            ),
+)
         VALIDATOR.WORKFLOW_CONTRACTS["Temporary Workflow"] = (
             temporary_contract
         )
@@ -180,7 +183,10 @@ class WorkflowContractValidatorTests(unittest.TestCase):
             required_node_positions=(
                 original_contract.required_node_positions
             ),
-        )
+                    required_connections=(
+                original_contract.required_connections
+            ),
+)
 
         VALIDATOR.WORKFLOW_CONTRACTS[
             "Phase 1 - Manual Health Check"
@@ -195,6 +201,52 @@ class WorkflowContractValidatorTests(unittest.TestCase):
 
         self.assertIn(
             "unexpected node id found: phase1-code-node",
+            errors,
+        )
+
+    def test_validate_workflow_uses_contract_required_connections(
+        self,
+    ) -> None:
+        original_contract = VALIDATOR.WORKFLOW_CONTRACTS[
+            "Phase 1 - Manual Health Check"
+        ]
+
+        temporary_contract = VALIDATOR.WorkflowContract(
+            workflow_name=original_contract.workflow_name,
+            version_id=original_contract.version_id,
+            required_workflow_fields=(
+                original_contract.required_workflow_fields
+            ),
+            required_node_ids=original_contract.required_node_ids,
+            required_node_contracts=(
+                original_contract.required_node_contracts
+            ),
+            required_code_node_parameters=(
+                original_contract.required_code_node_parameters
+            ),
+            required_node_positions=(
+                original_contract.required_node_positions
+            ),
+            required_connections=(
+                VALIDATOR.REQUIRED_CONNECTIONS
+                - {("If", 1, "Mark Unhealthy", 0)}
+            ),
+        )
+
+        VALIDATOR.WORKFLOW_CONTRACTS[
+            "Phase 1 - Manual Health Check"
+        ] = temporary_contract
+
+        try:
+            errors = self.validate_copy(self.valid_workflow)
+        finally:
+            VALIDATOR.WORKFLOW_CONTRACTS[
+                "Phase 1 - Manual Health Check"
+            ] = original_contract
+
+        self.assertIn(
+            "unexpected connection found: "
+            "If[1] -> Mark Unhealthy[0]",
             errors,
         )
 
@@ -222,7 +274,10 @@ class WorkflowContractValidatorTests(unittest.TestCase):
                 **VALIDATOR.REQUIRED_NODE_POSITIONS,
                 "manual-trigger": [999, 999],
             },
-        )
+                    required_connections=(
+                original_contract.required_connections
+            ),
+)
 
         VALIDATOR.WORKFLOW_CONTRACTS[
             "Phase 1 - Manual Health Check"
@@ -269,7 +324,10 @@ class WorkflowContractValidatorTests(unittest.TestCase):
             required_node_positions=(
                 original_contract.required_node_positions
             ),
-        )
+                    required_connections=(
+                original_contract.required_connections
+            ),
+)
 
         VALIDATOR.WORKFLOW_CONTRACTS[
             "Phase 1 - Manual Health Check"
@@ -320,7 +378,10 @@ class WorkflowContractValidatorTests(unittest.TestCase):
             required_node_positions=(
                 original_contract.required_node_positions
             ),
-        )
+                    required_connections=(
+                original_contract.required_connections
+            ),
+)
 
         VALIDATOR.WORKFLOW_CONTRACTS[
             "Phase 1 - Manual Health Check"
@@ -480,7 +541,10 @@ class WorkflowContractValidatorTests(unittest.TestCase):
             required_node_positions=(
                 original_contract.required_node_positions
             ),
-        )
+                    required_connections=(
+                original_contract.required_connections
+            ),
+)
 
         VALIDATOR.WORKFLOW_CONTRACTS[
             "Phase 1 - Manual Health Check"
