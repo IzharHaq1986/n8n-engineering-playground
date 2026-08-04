@@ -264,6 +264,24 @@ REQUIRED_RESPONSE_ASSIGNMENTS = {
     ],
 }
 
+REQUIRED_PARAMETER_IDS = {
+    "status-assignment",
+    "if-status-ok-condition",
+    "validate-payload-status-present-condition",
+    "health-check-result-passed-assignment",
+    "health-check-result-failed-assignment",
+    "workflow-assignment-phase1-build-success-response",
+    "workflow-version-assignment-phase1-build-success-response",
+    "response-schema-version-assignment-phase1-build-success-response",
+    "execution-source-assignment-phase1-build-success-response",
+    "execution-status-assignment-phase1-build-success-response",
+    "workflow-assignment-phase1-build-failure-response",
+    "workflow-version-assignment-phase1-build-failure-response",
+    "response-schema-version-assignment-phase1-build-failure-response",
+    "execution-source-assignment-phase1-build-failure-response",
+    "execution-status-assignment-phase1-build-failure-response",
+}
+
 @dataclass(frozen=True)
 class WorkflowContract:
     """Deterministic repository workflow contract."""
@@ -299,6 +317,7 @@ class WorkflowContract:
         str,
         list[tuple[str, str, str, str]],
     ]
+    required_parameter_ids: set[str]
 
 
 WORKFLOW_CONTRACTS = {
@@ -319,6 +338,7 @@ WORKFLOW_CONTRACTS = {
         required_condition_options=REQUIRED_CONDITION_OPTIONS,
         required_set_node_options=REQUIRED_SET_NODE_OPTIONS,
         required_response_assignments=REQUIRED_RESPONSE_ASSIGNMENTS,
+        required_parameter_ids=REQUIRED_PARAMETER_IDS,
     ),
 }
 
@@ -369,24 +389,6 @@ REQUIRED_SETTINGS = {
     "executionOrder": "v1",
     "binaryMode": "separate",
     "availableInMCP": False,
-}
-
-REQUIRED_PARAMETER_IDS = {
-    "status-assignment",
-    "if-status-ok-condition",
-    "validate-payload-status-present-condition",
-    "health-check-result-passed-assignment",
-    "health-check-result-failed-assignment",
-    "workflow-assignment-phase1-build-success-response",
-    "workflow-version-assignment-phase1-build-success-response",
-    "response-schema-version-assignment-phase1-build-success-response",
-    "execution-source-assignment-phase1-build-success-response",
-    "execution-status-assignment-phase1-build-success-response",
-    "workflow-assignment-phase1-build-failure-response",
-    "workflow-version-assignment-phase1-build-failure-response",
-    "response-schema-version-assignment-phase1-build-failure-response",
-    "execution-source-assignment-phase1-build-failure-response",
-    "execution-status-assignment-phase1-build-failure-response",
 }
 
 
@@ -946,15 +948,21 @@ def validate_workflow(workflow_path: Path) -> list[str]:
 
     parameter_id_set = set(parameter_ids)
 
+    required_parameter_ids = (
+        contract.required_parameter_ids
+        if contract is not None
+        else REQUIRED_PARAMETER_IDS
+    )
+
     missing_parameter_ids = sorted(
-        REQUIRED_PARAMETER_IDS - parameter_id_set
+        required_parameter_ids - parameter_id_set
     )
 
     for parameter_id in missing_parameter_ids:
         errors.append(f"required parameter id is missing: {parameter_id}")
 
     unexpected_parameter_ids = sorted(
-        parameter_id_set - REQUIRED_PARAMETER_IDS
+        parameter_id_set - required_parameter_ids
     )
 
     for parameter_id in unexpected_parameter_ids:

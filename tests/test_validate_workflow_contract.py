@@ -162,6 +162,9 @@ class WorkflowContractValidatorTests(unittest.TestCase):
             required_response_assignments=(
                 phase1_contract.required_response_assignments
             ),
+            required_parameter_ids=(
+                phase1_contract.required_parameter_ids
+            ),
 )
         VALIDATOR.WORKFLOW_CONTRACTS["Temporary Workflow"] = (
             temporary_contract
@@ -222,6 +225,9 @@ class WorkflowContractValidatorTests(unittest.TestCase):
             required_response_assignments=(
                 original_contract.required_response_assignments
             ),
+            required_parameter_ids=(
+                original_contract.required_parameter_ids
+            ),
 )
 
         VALIDATOR.WORKFLOW_CONTRACTS[
@@ -237,6 +243,74 @@ class WorkflowContractValidatorTests(unittest.TestCase):
 
         self.assertIn(
             "unexpected node id found: phase1-code-node",
+            errors,
+        )
+
+    def test_validate_workflow_uses_contract_required_parameter_ids(
+        self,
+    ) -> None:
+        original_contract = VALIDATOR.WORKFLOW_CONTRACTS[
+            "Phase 1 - Manual Health Check"
+        ]
+
+        temporary_contract = VALIDATOR.WorkflowContract(
+            workflow_name=original_contract.workflow_name,
+            version_id=original_contract.version_id,
+            required_workflow_fields=(
+                original_contract.required_workflow_fields
+            ),
+            required_node_ids=original_contract.required_node_ids,
+            required_node_contracts=(
+                original_contract.required_node_contracts
+            ),
+            required_code_node_parameters=(
+                original_contract.required_code_node_parameters
+            ),
+            required_node_positions=(
+                original_contract.required_node_positions
+            ),
+            required_connections=(
+                original_contract.required_connections
+            ),
+            required_branch_assignments=(
+                original_contract.required_branch_assignments
+            ),
+            required_include_other_fields=(
+                original_contract.required_include_other_fields
+            ),
+            required_branch_conditions=(
+                original_contract.required_branch_conditions
+            ),
+            required_condition_options=(
+                original_contract.required_condition_options
+            ),
+            required_set_node_options=(
+                original_contract.required_set_node_options
+            ),
+            required_response_assignments=(
+                original_contract.required_response_assignments
+            ),
+            required_parameter_ids=(
+                VALIDATOR.REQUIRED_PARAMETER_IDS
+                - {"status-assignment"}
+                | {"temporary-required-parameter-id"}
+            ),
+        )
+
+        VALIDATOR.WORKFLOW_CONTRACTS[
+            "Phase 1 - Manual Health Check"
+        ] = temporary_contract
+
+        try:
+            errors = self.validate_copy(self.valid_workflow)
+        finally:
+            VALIDATOR.WORKFLOW_CONTRACTS[
+                "Phase 1 - Manual Health Check"
+            ] = original_contract
+
+        self.assertIn(
+            "required parameter id is missing: "
+            "temporary-required-parameter-id",
             errors,
         )
 
@@ -295,7 +369,10 @@ class WorkflowContractValidatorTests(unittest.TestCase):
                     ][1:],
                 ],
             },
-        )
+                    required_parameter_ids=(
+                original_contract.required_parameter_ids
+            ),
+)
 
         VALIDATOR.WORKFLOW_CONTRACTS[
             "Phase 1 - Manual Health Check"
@@ -365,6 +442,9 @@ class WorkflowContractValidatorTests(unittest.TestCase):
                     required_response_assignments=(
                 original_contract.required_response_assignments
             ),
+            required_parameter_ids=(
+                original_contract.required_parameter_ids
+            ),
 )
 
         VALIDATOR.WORKFLOW_CONTRACTS[
@@ -431,6 +511,9 @@ class WorkflowContractValidatorTests(unittest.TestCase):
             ),
             required_response_assignments=(
                 original_contract.required_response_assignments
+            ),
+            required_parameter_ids=(
+                original_contract.required_parameter_ids
             ),
 )
 
@@ -510,6 +593,9 @@ class WorkflowContractValidatorTests(unittest.TestCase):
             required_response_assignments=(
                 original_contract.required_response_assignments
             ),
+            required_parameter_ids=(
+                original_contract.required_parameter_ids
+            ),
 )
 
         VALIDATOR.WORKFLOW_CONTRACTS[
@@ -577,6 +663,9 @@ class WorkflowContractValidatorTests(unittest.TestCase):
             ),
             required_response_assignments=(
                 original_contract.required_response_assignments
+            ),
+            required_parameter_ids=(
+                original_contract.required_parameter_ids
             ),
 )
 
@@ -649,6 +738,9 @@ class WorkflowContractValidatorTests(unittest.TestCase):
             required_response_assignments=(
                 original_contract.required_response_assignments
             ),
+            required_parameter_ids=(
+                original_contract.required_parameter_ids
+            ),
 )
 
         VALIDATOR.WORKFLOW_CONTRACTS[
@@ -716,6 +808,9 @@ class WorkflowContractValidatorTests(unittest.TestCase):
             required_response_assignments=(
                 original_contract.required_response_assignments
             ),
+            required_parameter_ids=(
+                original_contract.required_parameter_ids
+            ),
 )
 
         VALIDATOR.WORKFLOW_CONTRACTS[
@@ -779,6 +874,9 @@ class WorkflowContractValidatorTests(unittest.TestCase):
             ),
             required_response_assignments=(
                 original_contract.required_response_assignments
+            ),
+            required_parameter_ids=(
+                original_contract.required_parameter_ids
             ),
 )
 
@@ -847,6 +945,9 @@ class WorkflowContractValidatorTests(unittest.TestCase):
             ),
             required_response_assignments=(
                 original_contract.required_response_assignments
+            ),
+            required_parameter_ids=(
+                original_contract.required_parameter_ids
             ),
 )
 
@@ -919,6 +1020,9 @@ class WorkflowContractValidatorTests(unittest.TestCase):
             ),
             required_response_assignments=(
                 original_contract.required_response_assignments
+            ),
+            required_parameter_ids=(
+                original_contract.required_parameter_ids
             ),
 )
 
@@ -1100,6 +1204,9 @@ class WorkflowContractValidatorTests(unittest.TestCase):
             ),
             required_response_assignments=(
                 original_contract.required_response_assignments
+            ),
+            required_parameter_ids=(
+                original_contract.required_parameter_ids
             ),
 )
 
