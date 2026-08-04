@@ -282,6 +282,13 @@ REQUIRED_PARAMETER_IDS = {
     "execution-status-assignment-phase1-build-failure-response",
 }
 
+REQUIRED_WORKFLOW_METADATA_TYPES = {
+    "pinData": dict,
+    "settings": dict,
+    "tags": list,
+    "nodeGroups": list,
+}
+
 @dataclass(frozen=True)
 class WorkflowContract:
     """Deterministic repository workflow contract."""
@@ -318,6 +325,7 @@ class WorkflowContract:
         list[tuple[str, str, str, str]],
     ]
     required_parameter_ids: set[str]
+    required_workflow_metadata_types: dict[str, type[Any]]
 
 
 WORKFLOW_CONTRACTS = {
@@ -339,6 +347,9 @@ WORKFLOW_CONTRACTS = {
         required_set_node_options=REQUIRED_SET_NODE_OPTIONS,
         required_response_assignments=REQUIRED_RESPONSE_ASSIGNMENTS,
         required_parameter_ids=REQUIRED_PARAMETER_IDS,
+        required_workflow_metadata_types=(
+            REQUIRED_WORKFLOW_METADATA_TYPES
+        ),
     ),
 }
 
@@ -376,13 +387,6 @@ def select_workflow_contract(
 PROHIBITED_KEYS = {
     "instanceId",
     "webhookId",
-}
-
-REQUIRED_WORKFLOW_METADATA_TYPES = {
-    "pinData": dict,
-    "settings": dict,
-    "tags": list,
-    "nodeGroups": list,
 }
 
 REQUIRED_SETTINGS = {
@@ -478,7 +482,15 @@ def validate_workflow(workflow_path: Path) -> list[str]:
             f"unexpected workflow field found: {field_name}"
         )
 
-    for field_name, expected_type in REQUIRED_WORKFLOW_METADATA_TYPES.items():
+    required_workflow_metadata_types = (
+        contract.required_workflow_metadata_types
+        if contract is not None
+        else REQUIRED_WORKFLOW_METADATA_TYPES
+    )
+
+    for field_name, expected_type in (
+        required_workflow_metadata_types.items()
+    ):
         if field_name not in workflow:
             errors.append(
                 f"required workflow metadata field is missing: {field_name}"
