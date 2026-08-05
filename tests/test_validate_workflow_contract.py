@@ -174,6 +174,9 @@ class WorkflowContractValidatorTests(unittest.TestCase):
             required_active_state=(
                 phase1_contract.required_active_state
             ),
+            required_empty_pin_data=(
+                phase1_contract.required_empty_pin_data
+            ),
 )
         VALIDATOR.WORKFLOW_CONTRACTS["Temporary Workflow"] = (
             temporary_contract
@@ -245,6 +248,9 @@ class WorkflowContractValidatorTests(unittest.TestCase):
             ),
             required_active_state=(
                 original_contract.required_active_state
+            ),
+            required_empty_pin_data=(
+                original_contract.required_empty_pin_data
             ),
 )
 
@@ -321,6 +327,9 @@ class WorkflowContractValidatorTests(unittest.TestCase):
             ),
             required_active_state=(
                 original_contract.required_active_state
+            ),
+            required_empty_pin_data=(
+                original_contract.required_empty_pin_data
             ),
 )
 
@@ -408,6 +417,9 @@ class WorkflowContractValidatorTests(unittest.TestCase):
             required_active_state=(
                 original_contract.required_active_state
             ),
+            required_empty_pin_data=(
+                original_contract.required_empty_pin_data
+            ),
 )
 
         VALIDATOR.WORKFLOW_CONTRACTS[
@@ -490,6 +502,9 @@ class WorkflowContractValidatorTests(unittest.TestCase):
             required_active_state=(
                 original_contract.required_active_state
             ),
+            required_empty_pin_data=(
+                original_contract.required_empty_pin_data
+            ),
 )
 
         VALIDATOR.WORKFLOW_CONTRACTS[
@@ -568,6 +583,9 @@ class WorkflowContractValidatorTests(unittest.TestCase):
             ),
             required_active_state=(
                 original_contract.required_active_state
+            ),
+            required_empty_pin_data=(
+                original_contract.required_empty_pin_data
             ),
 )
 
@@ -659,6 +677,9 @@ class WorkflowContractValidatorTests(unittest.TestCase):
             required_active_state=(
                 original_contract.required_active_state
             ),
+            required_empty_pin_data=(
+                original_contract.required_empty_pin_data
+            ),
 )
 
         VALIDATOR.WORKFLOW_CONTRACTS[
@@ -738,6 +759,9 @@ class WorkflowContractValidatorTests(unittest.TestCase):
             ),
             required_active_state=(
                 original_contract.required_active_state
+            ),
+            required_empty_pin_data=(
+                original_contract.required_empty_pin_data
             ),
 )
 
@@ -822,6 +846,9 @@ class WorkflowContractValidatorTests(unittest.TestCase):
             required_active_state=(
                 original_contract.required_active_state
             ),
+            required_empty_pin_data=(
+                original_contract.required_empty_pin_data
+            ),
 )
 
         VALIDATOR.WORKFLOW_CONTRACTS[
@@ -901,6 +928,9 @@ class WorkflowContractValidatorTests(unittest.TestCase):
             required_active_state=(
                 original_contract.required_active_state
             ),
+            required_empty_pin_data=(
+                original_contract.required_empty_pin_data
+            ),
 )
 
         VALIDATOR.WORKFLOW_CONTRACTS[
@@ -976,6 +1006,9 @@ class WorkflowContractValidatorTests(unittest.TestCase):
             ),
             required_active_state=(
                 original_contract.required_active_state
+            ),
+            required_empty_pin_data=(
+                original_contract.required_empty_pin_data
             ),
 )
 
@@ -1056,6 +1089,9 @@ class WorkflowContractValidatorTests(unittest.TestCase):
             ),
             required_active_state=(
                 original_contract.required_active_state
+            ),
+            required_empty_pin_data=(
+                original_contract.required_empty_pin_data
             ),
 )
 
@@ -1140,6 +1176,9 @@ class WorkflowContractValidatorTests(unittest.TestCase):
             ),
             required_active_state=(
                 original_contract.required_active_state
+            ),
+            required_empty_pin_data=(
+                original_contract.required_empty_pin_data
             ),
 )
 
@@ -1328,7 +1367,10 @@ class WorkflowContractValidatorTests(unittest.TestCase):
                 original_contract.required_settings
             ),
             required_active_state=True,
-        )
+                    required_empty_pin_data=(
+                original_contract.required_empty_pin_data
+            ),
+)
 
         VALIDATOR.WORKFLOW_CONTRACTS[
             "Phase 1 - Manual Health Check"
@@ -1346,6 +1388,85 @@ class WorkflowContractValidatorTests(unittest.TestCase):
             "found False",
             errors,
         )
+
+    def test_validate_workflow_uses_contract_required_empty_pin_data(
+        self,
+    ) -> None:
+        workflow = copy.deepcopy(self.valid_workflow)
+        workflow["pinData"] = {
+            "temporary": {
+                "value": 1,
+            },
+        }
+
+        original_contract = VALIDATOR.WORKFLOW_CONTRACTS[
+            "Phase 1 - Manual Health Check"
+        ]
+
+        temporary_contract = VALIDATOR.WorkflowContract(
+            workflow_name=original_contract.workflow_name,
+            version_id=original_contract.version_id,
+            required_workflow_fields=(
+                original_contract.required_workflow_fields
+            ),
+            required_node_ids=original_contract.required_node_ids,
+            required_node_contracts=(
+                original_contract.required_node_contracts
+            ),
+            required_code_node_parameters=(
+                original_contract.required_code_node_parameters
+            ),
+            required_node_positions=(
+                original_contract.required_node_positions
+            ),
+            required_connections=(
+                original_contract.required_connections
+            ),
+            required_branch_assignments=(
+                original_contract.required_branch_assignments
+            ),
+            required_include_other_fields=(
+                original_contract.required_include_other_fields
+            ),
+            required_branch_conditions=(
+                original_contract.required_branch_conditions
+            ),
+            required_condition_options=(
+                original_contract.required_condition_options
+            ),
+            required_set_node_options=(
+                original_contract.required_set_node_options
+            ),
+            required_response_assignments=(
+                original_contract.required_response_assignments
+            ),
+            required_parameter_ids=(
+                original_contract.required_parameter_ids
+            ),
+            required_workflow_metadata_types=(
+                original_contract.required_workflow_metadata_types
+            ),
+            required_settings=(
+                original_contract.required_settings
+            ),
+            required_active_state=(
+                original_contract.required_active_state
+            ),
+            required_empty_pin_data=False,
+        )
+
+        VALIDATOR.WORKFLOW_CONTRACTS[
+            "Phase 1 - Manual Health Check"
+        ] = temporary_contract
+
+        try:
+            errors = self.validate_copy(workflow)
+        finally:
+            VALIDATOR.WORKFLOW_CONTRACTS[
+                "Phase 1 - Manual Health Check"
+            ] = original_contract
+
+        self.assertEqual([], errors)
 
     def test_validate_workflow_uses_contract_required_settings(
         self,
@@ -1403,6 +1524,9 @@ class WorkflowContractValidatorTests(unittest.TestCase):
             },
                     required_active_state=(
                 original_contract.required_active_state
+            ),
+            required_empty_pin_data=(
+                original_contract.required_empty_pin_data
             ),
 )
 
@@ -1480,6 +1604,9 @@ class WorkflowContractValidatorTests(unittest.TestCase):
             ),
             required_active_state=(
                 original_contract.required_active_state
+            ),
+            required_empty_pin_data=(
+                original_contract.required_empty_pin_data
             ),
 )
 
@@ -1559,6 +1686,9 @@ class WorkflowContractValidatorTests(unittest.TestCase):
             ),
             required_active_state=(
                 original_contract.required_active_state
+            ),
+            required_empty_pin_data=(
+                original_contract.required_empty_pin_data
             ),
 )
 
