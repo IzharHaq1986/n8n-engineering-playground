@@ -334,6 +334,7 @@ class WorkflowContract:
     required_workflow_metadata_types: dict[str, type[Any]]
     required_settings: dict[str, Any]
     required_active_state: bool
+    required_empty_pin_data: bool
 
 
 WORKFLOW_CONTRACTS = {
@@ -360,6 +361,7 @@ WORKFLOW_CONTRACTS = {
         ),
         required_settings=REQUIRED_SETTINGS,
         required_active_state=False,
+        required_empty_pin_data=True,
     ),
 }
 
@@ -511,7 +513,17 @@ def validate_workflow(workflow_path: Path) -> list[str]:
 
     pin_data = workflow.get("pinData")
 
-    if isinstance(pin_data, dict) and pin_data:
+    required_empty_pin_data = (
+        contract.required_empty_pin_data
+        if contract is not None
+        else True
+    )
+
+    if (
+        required_empty_pin_data
+        and isinstance(pin_data, dict)
+        and pin_data
+    ):
         errors.append(
             f"workflow pinData must be empty, found {pin_data!r}"
         )
