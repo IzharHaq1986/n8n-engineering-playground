@@ -333,6 +333,7 @@ class WorkflowContract:
     required_parameter_ids: set[str]
     required_workflow_metadata_types: dict[str, type[Any]]
     required_settings: dict[str, Any]
+    required_active_state: bool
 
 
 WORKFLOW_CONTRACTS = {
@@ -358,6 +359,7 @@ WORKFLOW_CONTRACTS = {
             REQUIRED_WORKFLOW_METADATA_TYPES
         ),
         required_settings=REQUIRED_SETTINGS,
+        required_active_state=False,
     ),
 }
 
@@ -530,9 +532,16 @@ def validate_workflow(workflow_path: Path) -> list[str]:
 
     active = workflow.get("active")
 
-    if active is not False:
+    required_active_state = (
+        contract.required_active_state
+        if contract is not None
+        else False
+    )
+
+    if active is not required_active_state:
         errors.append(
-            f"workflow active state must be False, found {active!r}"
+            "workflow active state must be "
+            f"{required_active_state!r}, found {active!r}"
         )
 
     settings = workflow.get("settings")
