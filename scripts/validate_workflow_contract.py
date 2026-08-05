@@ -289,6 +289,12 @@ REQUIRED_WORKFLOW_METADATA_TYPES = {
     "nodeGroups": list,
 }
 
+REQUIRED_SETTINGS = {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": False,
+}
+
 @dataclass(frozen=True)
 class WorkflowContract:
     """Deterministic repository workflow contract."""
@@ -326,6 +332,7 @@ class WorkflowContract:
     ]
     required_parameter_ids: set[str]
     required_workflow_metadata_types: dict[str, type[Any]]
+    required_settings: dict[str, Any]
 
 
 WORKFLOW_CONTRACTS = {
@@ -350,6 +357,7 @@ WORKFLOW_CONTRACTS = {
         required_workflow_metadata_types=(
             REQUIRED_WORKFLOW_METADATA_TYPES
         ),
+        required_settings=REQUIRED_SETTINGS,
     ),
 }
 
@@ -387,12 +395,6 @@ def select_workflow_contract(
 PROHIBITED_KEYS = {
     "instanceId",
     "webhookId",
-}
-
-REQUIRED_SETTINGS = {
-    "executionOrder": "v1",
-    "binaryMode": "separate",
-    "availableInMCP": False,
 }
 
 
@@ -535,9 +537,15 @@ def validate_workflow(workflow_path: Path) -> list[str]:
 
     settings = workflow.get("settings")
 
+    required_settings = (
+        contract.required_settings
+        if contract is not None
+        else REQUIRED_SETTINGS
+    )
+
     if isinstance(settings, dict):
         unexpected_setting_names = sorted(
-            set(settings) - set(REQUIRED_SETTINGS)
+            set(settings) - set(required_settings)
         )
 
         for setting_name in unexpected_setting_names:
@@ -545,7 +553,7 @@ def validate_workflow(workflow_path: Path) -> list[str]:
                 f"unexpected workflow setting found: {setting_name}"
             )
 
-        for setting_name, expected_value in REQUIRED_SETTINGS.items():
+        for setting_name, expected_value in required_settings.items():
             actual_value = settings.get(setting_name)
 
             if actual_value != expected_value:
