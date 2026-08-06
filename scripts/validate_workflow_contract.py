@@ -335,6 +335,7 @@ class WorkflowContract:
     required_settings: dict[str, Any]
     required_active_state: bool
     required_empty_pin_data: bool
+    required_empty_tags: bool
 
 
 WORKFLOW_CONTRACTS = {
@@ -362,6 +363,7 @@ WORKFLOW_CONTRACTS = {
         required_settings=REQUIRED_SETTINGS,
         required_active_state=False,
         required_empty_pin_data=True,
+        required_empty_tags=True,
     ),
 }
 
@@ -530,7 +532,13 @@ def validate_workflow(workflow_path: Path) -> list[str]:
 
     tags = workflow.get("tags")
 
-    if isinstance(tags, list) and tags:
+    required_empty_tags = (
+        contract.required_empty_tags
+        if contract is not None
+        else True
+    )
+
+    if required_empty_tags and isinstance(tags, list) and tags:
         errors.append(
             f"workflow tags must be empty, found {tags!r}"
         )
