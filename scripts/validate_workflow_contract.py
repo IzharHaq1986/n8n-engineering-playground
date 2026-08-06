@@ -336,6 +336,7 @@ class WorkflowContract:
     required_active_state: bool
     required_empty_pin_data: bool
     required_empty_tags: bool
+    required_empty_node_groups: bool
 
 
 WORKFLOW_CONTRACTS = {
@@ -364,6 +365,7 @@ WORKFLOW_CONTRACTS = {
         required_active_state=False,
         required_empty_pin_data=True,
         required_empty_tags=True,
+        required_empty_node_groups=True,
     ),
 }
 
@@ -545,7 +547,17 @@ def validate_workflow(workflow_path: Path) -> list[str]:
 
     node_groups = workflow.get("nodeGroups")
 
-    if isinstance(node_groups, list) and node_groups:
+    required_empty_node_groups = (
+        contract.required_empty_node_groups
+        if contract is not None
+        else True
+    )
+
+    if (
+        required_empty_node_groups
+        and isinstance(node_groups, list)
+        and node_groups
+    ):
         errors.append(
             f"workflow nodeGroups must be empty, found {node_groups!r}"
         )

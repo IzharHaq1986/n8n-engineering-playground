@@ -180,6 +180,9 @@ class WorkflowContractValidatorTests(unittest.TestCase):
             required_empty_tags=(
                 phase1_contract.required_empty_tags
             ),
+            required_empty_node_groups=(
+                phase1_contract.required_empty_node_groups
+            ),
 )
         VALIDATOR.WORKFLOW_CONTRACTS["Temporary Workflow"] = (
             temporary_contract
@@ -257,6 +260,9 @@ class WorkflowContractValidatorTests(unittest.TestCase):
             ),
             required_empty_tags=(
                 original_contract.required_empty_tags
+            ),
+            required_empty_node_groups=(
+                original_contract.required_empty_node_groups
             ),
 )
 
@@ -339,6 +345,9 @@ class WorkflowContractValidatorTests(unittest.TestCase):
             ),
             required_empty_tags=(
                 original_contract.required_empty_tags
+            ),
+            required_empty_node_groups=(
+                original_contract.required_empty_node_groups
             ),
 )
 
@@ -432,6 +441,9 @@ class WorkflowContractValidatorTests(unittest.TestCase):
             required_empty_tags=(
                 original_contract.required_empty_tags
             ),
+            required_empty_node_groups=(
+                original_contract.required_empty_node_groups
+            ),
 )
 
         VALIDATOR.WORKFLOW_CONTRACTS[
@@ -520,6 +532,9 @@ class WorkflowContractValidatorTests(unittest.TestCase):
             required_empty_tags=(
                 original_contract.required_empty_tags
             ),
+            required_empty_node_groups=(
+                original_contract.required_empty_node_groups
+            ),
 )
 
         VALIDATOR.WORKFLOW_CONTRACTS[
@@ -604,6 +619,9 @@ class WorkflowContractValidatorTests(unittest.TestCase):
             ),
             required_empty_tags=(
                 original_contract.required_empty_tags
+            ),
+            required_empty_node_groups=(
+                original_contract.required_empty_node_groups
             ),
 )
 
@@ -701,6 +719,9 @@ class WorkflowContractValidatorTests(unittest.TestCase):
             required_empty_tags=(
                 original_contract.required_empty_tags
             ),
+            required_empty_node_groups=(
+                original_contract.required_empty_node_groups
+            ),
 )
 
         VALIDATOR.WORKFLOW_CONTRACTS[
@@ -786,6 +807,9 @@ class WorkflowContractValidatorTests(unittest.TestCase):
             ),
             required_empty_tags=(
                 original_contract.required_empty_tags
+            ),
+            required_empty_node_groups=(
+                original_contract.required_empty_node_groups
             ),
 )
 
@@ -876,6 +900,9 @@ class WorkflowContractValidatorTests(unittest.TestCase):
             required_empty_tags=(
                 original_contract.required_empty_tags
             ),
+            required_empty_node_groups=(
+                original_contract.required_empty_node_groups
+            ),
 )
 
         VALIDATOR.WORKFLOW_CONTRACTS[
@@ -961,6 +988,9 @@ class WorkflowContractValidatorTests(unittest.TestCase):
             required_empty_tags=(
                 original_contract.required_empty_tags
             ),
+            required_empty_node_groups=(
+                original_contract.required_empty_node_groups
+            ),
 )
 
         VALIDATOR.WORKFLOW_CONTRACTS[
@@ -1042,6 +1072,9 @@ class WorkflowContractValidatorTests(unittest.TestCase):
             ),
             required_empty_tags=(
                 original_contract.required_empty_tags
+            ),
+            required_empty_node_groups=(
+                original_contract.required_empty_node_groups
             ),
 )
 
@@ -1128,6 +1161,9 @@ class WorkflowContractValidatorTests(unittest.TestCase):
             ),
             required_empty_tags=(
                 original_contract.required_empty_tags
+            ),
+            required_empty_node_groups=(
+                original_contract.required_empty_node_groups
             ),
 )
 
@@ -1218,6 +1254,9 @@ class WorkflowContractValidatorTests(unittest.TestCase):
             ),
             required_empty_tags=(
                 original_contract.required_empty_tags
+            ),
+            required_empty_node_groups=(
+                original_contract.required_empty_node_groups
             ),
 )
 
@@ -1412,6 +1451,9 @@ class WorkflowContractValidatorTests(unittest.TestCase):
             required_empty_tags=(
                 original_contract.required_empty_tags
             ),
+            required_empty_node_groups=(
+                original_contract.required_empty_node_groups
+            ),
 )
 
         VALIDATOR.WORKFLOW_CONTRACTS[
@@ -1498,6 +1540,9 @@ class WorkflowContractValidatorTests(unittest.TestCase):
                     required_empty_tags=(
                 original_contract.required_empty_tags
             ),
+            required_empty_node_groups=(
+                original_contract.required_empty_node_groups
+            ),
 )
 
         VALIDATOR.WORKFLOW_CONTRACTS[
@@ -1578,6 +1623,94 @@ class WorkflowContractValidatorTests(unittest.TestCase):
                 original_contract.required_empty_pin_data
             ),
             required_empty_tags=False,
+                    required_empty_node_groups=(
+                original_contract.required_empty_node_groups
+            ),
+)
+
+        VALIDATOR.WORKFLOW_CONTRACTS[
+            "Phase 1 - Manual Health Check"
+        ] = temporary_contract
+
+        try:
+            errors = self.validate_copy(workflow)
+        finally:
+            VALIDATOR.WORKFLOW_CONTRACTS[
+                "Phase 1 - Manual Health Check"
+            ] = original_contract
+
+        self.assertEqual([], errors)
+
+    def test_validate_workflow_uses_contract_required_empty_node_groups(
+        self,
+    ) -> None:
+        workflow = copy.deepcopy(self.valid_workflow)
+        workflow["nodeGroups"] = [
+            {
+                "name": "temporary",
+            },
+        ]
+
+        original_contract = VALIDATOR.WORKFLOW_CONTRACTS[
+            "Phase 1 - Manual Health Check"
+        ]
+
+        temporary_contract = VALIDATOR.WorkflowContract(
+            workflow_name=original_contract.workflow_name,
+            version_id=original_contract.version_id,
+            required_workflow_fields=(
+                original_contract.required_workflow_fields
+            ),
+            required_node_ids=original_contract.required_node_ids,
+            required_node_contracts=(
+                original_contract.required_node_contracts
+            ),
+            required_code_node_parameters=(
+                original_contract.required_code_node_parameters
+            ),
+            required_node_positions=(
+                original_contract.required_node_positions
+            ),
+            required_connections=(
+                original_contract.required_connections
+            ),
+            required_branch_assignments=(
+                original_contract.required_branch_assignments
+            ),
+            required_include_other_fields=(
+                original_contract.required_include_other_fields
+            ),
+            required_branch_conditions=(
+                original_contract.required_branch_conditions
+            ),
+            required_condition_options=(
+                original_contract.required_condition_options
+            ),
+            required_set_node_options=(
+                original_contract.required_set_node_options
+            ),
+            required_response_assignments=(
+                original_contract.required_response_assignments
+            ),
+            required_parameter_ids=(
+                original_contract.required_parameter_ids
+            ),
+            required_workflow_metadata_types=(
+                original_contract.required_workflow_metadata_types
+            ),
+            required_settings=(
+                original_contract.required_settings
+            ),
+            required_active_state=(
+                original_contract.required_active_state
+            ),
+            required_empty_pin_data=(
+                original_contract.required_empty_pin_data
+            ),
+            required_empty_tags=(
+                original_contract.required_empty_tags
+            ),
+            required_empty_node_groups=False,
         )
 
         VALIDATOR.WORKFLOW_CONTRACTS[
@@ -1655,6 +1788,9 @@ class WorkflowContractValidatorTests(unittest.TestCase):
             ),
             required_empty_tags=(
                 original_contract.required_empty_tags
+            ),
+            required_empty_node_groups=(
+                original_contract.required_empty_node_groups
             ),
 )
 
@@ -1738,6 +1874,9 @@ class WorkflowContractValidatorTests(unittest.TestCase):
             ),
             required_empty_tags=(
                 original_contract.required_empty_tags
+            ),
+            required_empty_node_groups=(
+                original_contract.required_empty_node_groups
             ),
 )
 
@@ -1823,6 +1962,9 @@ class WorkflowContractValidatorTests(unittest.TestCase):
             ),
             required_empty_tags=(
                 original_contract.required_empty_tags
+            ),
+            required_empty_node_groups=(
+                original_contract.required_empty_node_groups
             ),
 )
 
