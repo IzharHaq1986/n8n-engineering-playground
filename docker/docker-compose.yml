@@ -5,6 +5,8 @@ services:
     ports:
       - "5678:5678"
     restart: unless-stopped
+    dns:
+      - 192.168.228.2
 
     healthcheck:
       test:
