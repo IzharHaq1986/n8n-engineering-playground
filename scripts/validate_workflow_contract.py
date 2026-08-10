@@ -307,6 +307,10 @@ class WorkflowContract:
         str,
         tuple[str, str, int | float],
     ]
+    required_node_parameters: dict[
+        str,
+        dict[str, Any],
+    ]
     required_code_node_parameters: dict[
         str,
         dict[str, Any],
@@ -339,13 +343,176 @@ class WorkflowContract:
     required_empty_node_groups: bool
 
 
+PHASE2_WORKFLOW_NAME = "Phase 2 - REST API Post Lookup"
+PHASE2_VERSION_ID = "phase2-rest-api-post-lookup-v1"
+
+PHASE2_REQUIRED_WORKFLOW_FIELDS = frozenset({
+    "name",
+    "nodes",
+    "pinData",
+    "connections",
+    "active",
+    "settings",
+    "versionId",
+    "meta",
+    "nodeGroups",
+    "tags",
+})
+
+PHASE2_REQUIRED_WORKFLOW_METADATA_TYPES = {
+    "pinData": dict,
+    "settings": dict,
+    "meta": dict,
+    "tags": list,
+    "nodeGroups": list,
+}
+
+PHASE2_REQUIRED_SETTINGS = {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": False,
+}
+
+PHASE2_REQUIRED_NODE_IDS = frozenset({
+    "phase2-manual-trigger",
+    "phase2-http-request",
+    "phase2-normalize-response",
+})
+
+PHASE2_REQUIRED_NODE_CONTRACTS = {
+    "phase2-manual-trigger": (
+        "Manual Trigger",
+        "n8n-nodes-base.manualTrigger",
+        1,
+    ),
+    "phase2-http-request": (
+        "HTTP Request",
+        "n8n-nodes-base.httpRequest",
+        4.4,
+    ),
+    "phase2-normalize-response": (
+        "Normalize Response",
+        "n8n-nodes-base.set",
+        3.4,
+    ),
+}
+
+PHASE2_REQUIRED_NODE_PARAMETERS = {
+    "phase2-http-request": {
+        "url": "https://jsonplaceholder.typicode.com/posts/1",
+        "options": {},
+    },
+}
+
+PHASE2_REQUIRED_NODE_POSITIONS = {
+    "phase2-manual-trigger": [0, 0],
+    "phase2-http-request": [208, 0],
+    "phase2-normalize-response": [416, 0],
+}
+
+PHASE2_REQUIRED_CONNECTIONS = {
+    ("Manual Trigger", 0, "HTTP Request", 0),
+    ("HTTP Request", 0, "Normalize Response", 0),
+}
+
+PHASE2_REQUIRED_RESPONSE_ASSIGNMENTS = {
+    "phase2-normalize-response": [
+        (
+            "phase2-source-assignment",
+            "source",
+            "jsonplaceholder",
+            "string",
+        ),
+        (
+            "phase2-resource-assignment",
+            "resource",
+            "post",
+            "string",
+        ),
+        (
+            "phase2-post-id-assignment",
+            "postId",
+            "={{$json.id}}",
+            "number",
+        ),
+        (
+            "phase2-user-id-assignment",
+            "userId",
+            "={{$json.userId}}",
+            "number",
+        ),
+        (
+            "phase2-title-assignment",
+            "title",
+            "={{$json.title}}",
+            "string",
+        ),
+        (
+            "phase2-body-assignment",
+            "body",
+            "={{$json.body}}",
+            "string",
+        ),
+        (
+            "phase2-status-assignment",
+            "status",
+            "ok",
+            "string",
+        ),
+    ],
+}
+
+PHASE2_REQUIRED_SET_NODE_OPTIONS = {
+    "phase2-normalize-response": {},
+}
+
+PHASE2_REQUIRED_PARAMETER_IDS = {
+    "phase2-source-assignment",
+    "phase2-resource-assignment",
+    "phase2-post-id-assignment",
+    "phase2-user-id-assignment",
+    "phase2-title-assignment",
+    "phase2-body-assignment",
+    "phase2-status-assignment",
+}
+
+
 WORKFLOW_CONTRACTS = {
+    PHASE2_WORKFLOW_NAME: WorkflowContract(
+        workflow_name=PHASE2_WORKFLOW_NAME,
+        version_id=PHASE2_VERSION_ID,
+        required_workflow_fields=PHASE2_REQUIRED_WORKFLOW_FIELDS,
+        required_node_ids=PHASE2_REQUIRED_NODE_IDS,
+        required_node_contracts=PHASE2_REQUIRED_NODE_CONTRACTS,
+        required_node_parameters=PHASE2_REQUIRED_NODE_PARAMETERS,
+        required_code_node_parameters={},
+        required_node_positions=PHASE2_REQUIRED_NODE_POSITIONS,
+        required_connections=PHASE2_REQUIRED_CONNECTIONS,
+        required_branch_assignments={},
+        required_include_other_fields={},
+        required_branch_conditions={},
+        required_condition_options={},
+        required_set_node_options=PHASE2_REQUIRED_SET_NODE_OPTIONS,
+        required_response_assignments=(
+            PHASE2_REQUIRED_RESPONSE_ASSIGNMENTS
+        ),
+        required_parameter_ids=PHASE2_REQUIRED_PARAMETER_IDS,
+        required_workflow_metadata_types=(
+            PHASE2_REQUIRED_WORKFLOW_METADATA_TYPES
+        ),
+        required_settings=PHASE2_REQUIRED_SETTINGS,
+        required_active_state=False,
+        required_empty_pin_data=True,
+        required_empty_tags=True,
+        required_empty_node_groups=True,
+    ),
     EXPECTED_WORKFLOW_NAME: WorkflowContract(
         workflow_name=EXPECTED_WORKFLOW_NAME,
         version_id=EXPECTED_VERSION_ID,
         required_workflow_fields=frozenset(REQUIRED_WORKFLOW_FIELDS),
         required_node_ids=frozenset(REQUIRED_NODE_IDS),
         required_node_contracts=REQUIRED_NODE_CONTRACTS,
+        required_node_parameters={},
         required_code_node_parameters=(
             REQUIRED_CODE_NODE_PARAMETERS
         ),
@@ -731,6 +898,28 @@ def validate_workflow(workflow_path: Path) -> list[str]:
                 f"node typeVersion mismatch for {node_id}: "
                 f"expected {expected_type_version!r}, "
                 f"found {actual_type_version!r}"
+            )
+
+    required_node_parameters = (
+        contract.required_node_parameters
+        if contract is not None
+        else {}
+    )
+
+    for node_id in sorted(required_node_parameters):
+        node = nodes_by_id.get(node_id)
+
+        if node is None:
+            continue
+
+        expected_parameters = required_node_parameters[node_id]
+        actual_parameters = node.get("parameters")
+
+        if actual_parameters != expected_parameters:
+            errors.append(
+                f"node parameter contract mismatch for {node_id}: "
+                f"expected {expected_parameters!r}, "
+                f"found {actual_parameters!r}"
             )
 
     required_node_positions = (
