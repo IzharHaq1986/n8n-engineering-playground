@@ -1,0 +1,124 @@
+{
+  "name": "Phase 2 - REST API Post Lookup",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "phase2-manual-trigger",
+      "name": "Manual Trigger"
+    },
+    {
+      "parameters": {
+        "url": "https://jsonplaceholder.typicode.com/posts/1",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        208,
+        0
+      ],
+      "id": "phase2-http-request",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "phase2-source-assignment",
+              "name": "source",
+              "value": "jsonplaceholder",
+              "type": "string"
+            },
+            {
+              "id": "phase2-resource-assignment",
+              "name": "resource",
+              "value": "post",
+              "type": "string"
+            },
+            {
+              "id": "phase2-post-id-assignment",
+              "name": "postId",
+              "value": "={{$json.id}}",
+              "type": "number"
+            },
+            {
+              "id": "phase2-user-id-assignment",
+              "name": "userId",
+              "value": "={{$json.userId}}",
+              "type": "number"
+            },
+            {
+              "id": "phase2-title-assignment",
+              "name": "title",
+              "value": "={{$json.title}}",
+              "type": "string"
+            },
+            {
+              "id": "phase2-body-assignment",
+              "name": "body",
+              "value": "={{$json.body}}",
+              "type": "string"
+            },
+            {
+              "id": "phase2-status-assignment",
+              "name": "status",
+              "value": "ok",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        416,
+        0
+      ],
+      "id": "phase2-normalize-response",
+      "name": "Normalize Response"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Normalize Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "phase2-rest-api-post-lookup-v1",
+  "meta": {},
+  "nodeGroups": [],
+  "tags": []
+}

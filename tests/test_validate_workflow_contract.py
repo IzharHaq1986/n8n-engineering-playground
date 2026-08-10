@@ -20,6 +20,9 @@ VALIDATOR_PATH = REPOSITORY_ROOT / "scripts/validate_workflow_contract.py"
 WORKFLOW_PATH = (
     REPOSITORY_ROOT / "workflows/phase1/manual-health-check.json"
 )
+PHASE2_WORKFLOW_PATH = (
+    REPOSITORY_ROOT / "workflows/phase2/rest-api-post-lookup.json"
+)
 
 
 def load_validator_module() -> ModuleType:
@@ -62,6 +65,43 @@ class WorkflowContractValidatorTests(unittest.TestCase):
 
     def test_repository_workflow_passes(self) -> None:
         errors = VALIDATOR.validate_workflow(WORKFLOW_PATH)
+
+        self.assertEqual([], errors)
+
+    def test_phase2_repository_workflow_uses_its_contract(
+        self,
+    ) -> None:
+        self.assertTrue(
+            PHASE2_WORKFLOW_PATH.is_file(),
+            "Phase 2 repository workflow must exist",
+        )
+
+        workflow = json.loads(
+            PHASE2_WORKFLOW_PATH.read_text(encoding="utf-8")
+        )
+
+        self.assertEqual(
+            "Phase 2 - REST API Post Lookup",
+            workflow["name"],
+        )
+
+        self.assertIn(
+            workflow["name"],
+            VALIDATOR.WORKFLOW_CONTRACTS,
+        )
+
+        selected_contract = VALIDATOR.select_workflow_contract(
+            workflow
+        )
+
+        self.assertIs(
+            VALIDATOR.WORKFLOW_CONTRACTS[workflow["name"]],
+            selected_contract,
+        )
+
+        errors = VALIDATOR.validate_workflow(
+            PHASE2_WORKFLOW_PATH
+        )
 
         self.assertEqual([], errors)
 
@@ -113,6 +153,99 @@ class WorkflowContractValidatorTests(unittest.TestCase):
             selected_workflows[0],
         )
 
+    def test_validate_workflow_uses_contract_required_node_parameters(
+        self,
+    ) -> None:
+        workflow = copy.deepcopy(self.valid_workflow)
+        workflow["name"] = "Temporary Workflow"
+        workflow["versionId"] = "temporary-workflow-v1"
+
+        original_contracts = VALIDATOR.WORKFLOW_CONTRACTS.copy()
+        phase1_contract = original_contracts[
+            "Phase 1 - Manual Health Check"
+        ]
+
+        temporary_contract = VALIDATOR.WorkflowContract(
+            workflow_name="Temporary Workflow",
+            version_id="temporary-workflow-v1",
+            required_workflow_fields=(
+                phase1_contract.required_workflow_fields
+            ),
+            required_node_ids=phase1_contract.required_node_ids,
+            required_node_contracts=(
+                phase1_contract.required_node_contracts
+            ),
+            required_code_node_parameters=(
+                phase1_contract.required_code_node_parameters
+            ),
+            required_node_positions=(
+                phase1_contract.required_node_positions
+            ),
+            required_connections=(
+                phase1_contract.required_connections
+            ),
+            required_branch_assignments=(
+                phase1_contract.required_branch_assignments
+            ),
+            required_include_other_fields=(
+                phase1_contract.required_include_other_fields
+            ),
+            required_branch_conditions=(
+                phase1_contract.required_branch_conditions
+            ),
+            required_condition_options=(
+                phase1_contract.required_condition_options
+            ),
+            required_set_node_options=(
+                phase1_contract.required_set_node_options
+            ),
+            required_response_assignments=(
+                phase1_contract.required_response_assignments
+            ),
+            required_parameter_ids=(
+                phase1_contract.required_parameter_ids
+            ),
+            required_workflow_metadata_types=(
+                phase1_contract.required_workflow_metadata_types
+            ),
+            required_settings=phase1_contract.required_settings,
+            required_active_state=(
+                phase1_contract.required_active_state
+            ),
+            required_empty_pin_data=(
+                phase1_contract.required_empty_pin_data
+            ),
+            required_empty_tags=(
+                phase1_contract.required_empty_tags
+            ),
+            required_empty_node_groups=(
+                phase1_contract.required_empty_node_groups
+            ),
+            required_node_parameters={
+                "manual-trigger": {},
+            },
+        )
+
+        VALIDATOR.WORKFLOW_CONTRACTS["Temporary Workflow"] = (
+            temporary_contract
+        )
+
+        workflow["nodes"][0]["parameters"] = {
+            "unexpected": True,
+        }
+
+        try:
+            errors = self.validate_copy(workflow)
+        finally:
+            VALIDATOR.WORKFLOW_CONTRACTS.clear()
+            VALIDATOR.WORKFLOW_CONTRACTS.update(original_contracts)
+
+        self.assertIn(
+            "node parameter contract mismatch for manual-trigger: "
+            "expected {}, found {'unexpected': True}",
+            errors,
+        )
+
     def test_validate_workflow_uses_selected_contract_metadata(
         self,
     ) -> None:
@@ -134,6 +267,9 @@ class WorkflowContractValidatorTests(unittest.TestCase):
             required_node_ids=phase1_contract.required_node_ids,
             required_node_contracts=(
                 phase1_contract.required_node_contracts
+            ),
+            required_node_parameters=(
+                phase1_contract.required_node_parameters
             ),
             required_code_node_parameters=(
                 phase1_contract.required_code_node_parameters
@@ -215,6 +351,9 @@ class WorkflowContractValidatorTests(unittest.TestCase):
             ),
             required_node_contracts=(
                 original_contract.required_node_contracts
+            ),
+            required_node_parameters=(
+                original_contract.required_node_parameters
             ),
             required_code_node_parameters=(
                 original_contract.required_code_node_parameters
@@ -298,6 +437,9 @@ class WorkflowContractValidatorTests(unittest.TestCase):
             required_node_ids=original_contract.required_node_ids,
             required_node_contracts=(
                 original_contract.required_node_contracts
+            ),
+            required_node_parameters=(
+                original_contract.required_node_parameters
             ),
             required_code_node_parameters=(
                 original_contract.required_code_node_parameters
@@ -384,6 +526,9 @@ class WorkflowContractValidatorTests(unittest.TestCase):
             required_node_ids=original_contract.required_node_ids,
             required_node_contracts=(
                 original_contract.required_node_contracts
+            ),
+            required_node_parameters=(
+                original_contract.required_node_parameters
             ),
             required_code_node_parameters=(
                 original_contract.required_code_node_parameters
@@ -484,6 +629,9 @@ class WorkflowContractValidatorTests(unittest.TestCase):
             required_node_contracts=(
                 original_contract.required_node_contracts
             ),
+            required_node_parameters=(
+                original_contract.required_node_parameters
+            ),
             required_code_node_parameters=(
                 original_contract.required_code_node_parameters
             ),
@@ -574,6 +722,9 @@ class WorkflowContractValidatorTests(unittest.TestCase):
             required_node_contracts=(
                 original_contract.required_node_contracts
             ),
+            required_node_parameters=(
+                original_contract.required_node_parameters
+            ),
             required_code_node_parameters=(
                 original_contract.required_code_node_parameters
             ),
@@ -662,6 +813,9 @@ class WorkflowContractValidatorTests(unittest.TestCase):
             required_node_ids=original_contract.required_node_ids,
             required_node_contracts=(
                 original_contract.required_node_contracts
+            ),
+            required_node_parameters=(
+                original_contract.required_node_parameters
             ),
             required_code_node_parameters=(
                 original_contract.required_code_node_parameters
@@ -762,6 +916,9 @@ class WorkflowContractValidatorTests(unittest.TestCase):
             required_node_contracts=(
                 original_contract.required_node_contracts
             ),
+            required_node_parameters=(
+                original_contract.required_node_parameters
+            ),
             required_code_node_parameters=(
                 original_contract.required_code_node_parameters
             ),
@@ -846,6 +1003,9 @@ class WorkflowContractValidatorTests(unittest.TestCase):
             required_node_ids=original_contract.required_node_ids,
             required_node_contracts=(
                 original_contract.required_node_contracts
+            ),
+            required_node_parameters=(
+                original_contract.required_node_parameters
             ),
             required_code_node_parameters=(
                 original_contract.required_code_node_parameters
@@ -942,6 +1102,9 @@ class WorkflowContractValidatorTests(unittest.TestCase):
             required_node_contracts=(
                 original_contract.required_node_contracts
             ),
+            required_node_parameters=(
+                original_contract.required_node_parameters
+            ),
             required_code_node_parameters=(
                 original_contract.required_code_node_parameters
             ),
@@ -1026,6 +1189,9 @@ class WorkflowContractValidatorTests(unittest.TestCase):
             required_node_ids=original_contract.required_node_ids,
             required_node_contracts=(
                 original_contract.required_node_contracts
+            ),
+            required_node_parameters=(
+                original_contract.required_node_parameters
             ),
             required_code_node_parameters=(
                 original_contract.required_code_node_parameters
@@ -1114,6 +1280,9 @@ class WorkflowContractValidatorTests(unittest.TestCase):
             required_node_ids=original_contract.required_node_ids,
             required_node_contracts=(
                 original_contract.required_node_contracts
+            ),
+            required_node_parameters=(
+                original_contract.required_node_parameters
             ),
             required_code_node_parameters={
                 "phase1-code-node": {
@@ -1210,6 +1379,9 @@ class WorkflowContractValidatorTests(unittest.TestCase):
                     2,
                 ),
             },
+            required_node_parameters=(
+                original_contract.required_node_parameters
+            ),
             required_code_node_parameters=(
                 original_contract.required_code_node_parameters
             ),
@@ -1408,6 +1580,9 @@ class WorkflowContractValidatorTests(unittest.TestCase):
             required_node_contracts=(
                 original_contract.required_node_contracts
             ),
+            required_node_parameters=(
+                original_contract.required_node_parameters
+            ),
             required_code_node_parameters=(
                 original_contract.required_code_node_parameters
             ),
@@ -1497,6 +1672,9 @@ class WorkflowContractValidatorTests(unittest.TestCase):
             required_node_contracts=(
                 original_contract.required_node_contracts
             ),
+            required_node_parameters=(
+                original_contract.required_node_parameters
+            ),
             required_code_node_parameters=(
                 original_contract.required_code_node_parameters
             ),
@@ -1579,6 +1757,9 @@ class WorkflowContractValidatorTests(unittest.TestCase):
             required_node_ids=original_contract.required_node_ids,
             required_node_contracts=(
                 original_contract.required_node_contracts
+            ),
+            required_node_parameters=(
+                original_contract.required_node_parameters
             ),
             required_code_node_parameters=(
                 original_contract.required_code_node_parameters
@@ -1665,6 +1846,9 @@ class WorkflowContractValidatorTests(unittest.TestCase):
             required_node_contracts=(
                 original_contract.required_node_contracts
             ),
+            required_node_parameters=(
+                original_contract.required_node_parameters
+            ),
             required_code_node_parameters=(
                 original_contract.required_code_node_parameters
             ),
@@ -1742,6 +1926,9 @@ class WorkflowContractValidatorTests(unittest.TestCase):
             required_node_ids=original_contract.required_node_ids,
             required_node_contracts=(
                 original_contract.required_node_contracts
+            ),
+            required_node_parameters=(
+                original_contract.required_node_parameters
             ),
             required_code_node_parameters=(
                 original_contract.required_code_node_parameters
@@ -1828,6 +2015,9 @@ class WorkflowContractValidatorTests(unittest.TestCase):
             required_node_ids=original_contract.required_node_ids,
             required_node_contracts=(
                 original_contract.required_node_contracts
+            ),
+            required_node_parameters=(
+                original_contract.required_node_parameters
             ),
             required_code_node_parameters=(
                 original_contract.required_code_node_parameters
@@ -1917,6 +2107,9 @@ class WorkflowContractValidatorTests(unittest.TestCase):
             required_node_ids=original_contract.required_node_ids,
             required_node_contracts=(
                 original_contract.required_node_contracts
+            ),
+            required_node_parameters=(
+                original_contract.required_node_parameters
             ),
             required_code_node_parameters=(
                 original_contract.required_code_node_parameters
