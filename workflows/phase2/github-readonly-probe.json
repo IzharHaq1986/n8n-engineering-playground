@@ -1,0 +1,143 @@
+{
+  "name": "Phase 2 - GitHub Read-Only Probe",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "phase2-github-manual-trigger",
+      "name": "Manual Trigger"
+    },
+    {
+      "parameters": {
+        "url": "https://api.github.com/repos/IzharHaq1986/n8n-engineering-playground",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/vnd.github+json"
+            },
+            {
+              "name": "X-GitHub-Api-Version",
+              "value": "2022-11-28"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        208,
+        0
+      ],
+      "id": "phase2-github-http-request",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "phase2-github-source",
+              "name": "source",
+              "value": "github",
+              "type": "string"
+            },
+            {
+              "id": "phase2-github-resource",
+              "name": "resource",
+              "value": "repository",
+              "type": "string"
+            },
+            {
+              "id": "phase2-github-name",
+              "name": "name",
+              "value": "={{ $json.name }}",
+              "type": "string"
+            },
+            {
+              "id": "phase2-github-full-name",
+              "name": "fullName",
+              "value": "={{ $json.full_name }}",
+              "type": "string"
+            },
+            {
+              "id": "phase2-github-visibility",
+              "name": "visibility",
+              "value": "={{ $json.visibility }}",
+              "type": "string"
+            },
+            {
+              "id": "phase2-github-default-branch",
+              "name": "defaultBranch",
+              "value": "={{ $json.default_branch }}",
+              "type": "string"
+            },
+            {
+              "id": "phase2-github-language",
+              "name": "language",
+              "value": "={{ $json.language }}",
+              "type": "string"
+            },
+            {
+              "id": "phase2-github-archived",
+              "name": "archived",
+              "value": "={{ $json.archived }}",
+              "type": "boolean"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        416,
+        0
+      ],
+      "id": "phase2-github-normalize-repository-metadata",
+      "name": "Normalize Repository Metadata"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Normalize Repository Metadata",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "phase2-github-readonly-probe-v1",
+  "meta": {},
+  "nodeGroups": [],
+  "tags": []
+}
