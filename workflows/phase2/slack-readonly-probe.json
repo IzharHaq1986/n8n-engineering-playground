@@ -1,0 +1,125 @@
+{
+  "name": "Phase 2 - Slack Read-Only Probe",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -368,
+        -32
+      ],
+      "id": "phase2-slack-manual-trigger",
+      "name": "Manual Trigger"
+    },
+    {
+      "parameters": {
+        "url": "https://slack.com/api/conversations.list",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "types",
+              "value": "public_channel"
+            },
+            {
+              "name": "exclude_archived",
+              "value": "true"
+            },
+            {
+              "name": "limit",
+              "value": "5"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -160,
+        -32
+      ],
+      "id": "phase2-slack-http-request",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "phase2-slack-source",
+              "name": "source",
+              "value": "slack",
+              "type": "string"
+            },
+            {
+              "id": "phase2-slack-resource",
+              "name": "resource",
+              "value": "public_channels",
+              "type": "string"
+            },
+            {
+              "id": "phase2-slack-ok",
+              "name": "ok",
+              "value": "={{ $json.ok }}",
+              "type": "boolean"
+            },
+            {
+              "id": "phase2-slack-channels",
+              "name": "channels",
+              "value": "={{ $json.channels.map(channel => ({ id: channel.id, name: channel.name, isPrivate: channel.is_private, isArchived: channel.is_archived })) }}",
+              "type": "array"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        48,
+        -32
+      ],
+      "id": "phase2-slack-normalize-public-channels",
+      "name": "Normalize Public Channels"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Normalize Public Channels",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "phase2-slack-readonly-probe-v1",
+  "meta": {},
+  "nodeGroups": [],
+  "tags": []
+}
