@@ -1,0 +1,102 @@
+{
+  "name": "Phase 2 - Discord Read-Only Probe",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -320,
+        -16
+      ],
+      "id": "phase2-discord-manual-trigger",
+      "name": "Manual Trigger"
+    },
+    {
+      "parameters": {
+        "url": "https://discord.com/api/v10/users/@me",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -112,
+        -16
+      ],
+      "id": "phase2-discord-http-request",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "phase2-discord-source",
+              "name": "source",
+              "value": "discord",
+              "type": "string"
+            },
+            {
+              "id": "phase2-discord-resource",
+              "name": "resource",
+              "value": "bot_identity",
+              "type": "string"
+            },
+            {
+              "id": "phase2-discord-authenticated",
+              "name": "authenticated",
+              "value": "={{ true }}",
+              "type": "boolean"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        96,
+        -16
+      ],
+      "id": "phase2-discord-normalize-bot-identity",
+      "name": "Normalize Bot Identity"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Normalize Bot Identity",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "phase2-discord-readonly-probe-v1",
+  "meta": {},
+  "nodeGroups": [],
+  "tags": []
+}
