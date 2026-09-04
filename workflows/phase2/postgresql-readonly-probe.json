@@ -1,0 +1,74 @@
+{
+  "name": "Phase 2 - PostgreSQL Read-Only Probe",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "phase2-postgresql-manual-trigger",
+      "name": "When clicking \u2018Execute workflow\u2019"
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "value": "n8n_probe",
+          "mode": "list",
+          "cachedResultName": "n8n_probe"
+        },
+        "table": {
+          "__rl": true,
+          "value": "integration_probe",
+          "mode": "list",
+          "cachedResultName": "integration_probe"
+        },
+        "limit": 10,
+        "sort": {
+          "values": [
+            {
+              "column": "id"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        208,
+        0
+      ],
+      "id": "phase2-postgresql-select-probe",
+      "name": "Select rows from a table"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking \u2018Execute workflow\u2019": {
+      "main": [
+        [
+          {
+            "node": "Select rows from a table",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "phase2-postgresql-readonly-probe-v1",
+  "meta": {},
+  "nodeGroups": [],
+  "tags": []
+}
