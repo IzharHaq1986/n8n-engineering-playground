@@ -1,0 +1,53 @@
+{
+  "name": "Phase 2 - SQLite Read-Only Probe",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "phase2-sqlite-manual-trigger",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "jsCode": "const { DatabaseSync } = require('node:sqlite');\n\n// Open the controlled SQLite fixture in read-only mode.\nconst db = new DatabaseSync('/home/node/.n8n/phase2-sqlite-probe.db', {\n  readOnly: true,\n});\n\nconst rows = db\n  .prepare(`\n    SELECT id, probe_key, probe_value\n    FROM integration_probe\n    ORDER BY id\n    LIMIT 10\n  `)\n  .all();\n\ndb.close();\n\nreturn rows.map((row) => ({\n  json: row,\n}));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        208,
+        0
+      ],
+      "id": "phase2-sqlite-read-probe",
+      "name": "Read SQLite Probe"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Read SQLite Probe",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "phase2-sqlite-readonly-probe-v1",
+  "meta": {},
+  "nodeGroups": [],
+  "tags": []
+}
