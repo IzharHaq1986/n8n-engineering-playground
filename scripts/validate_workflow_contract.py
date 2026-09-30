@@ -3,7 +3,8 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+import hashlib
 import json
 import sys
 from pathlib import Path
@@ -341,6 +342,9 @@ class WorkflowContract:
     required_empty_pin_data: bool
     required_empty_tags: bool
     required_empty_node_groups: bool
+    required_node_parameter_hashes: dict[str, str] = field(
+        default_factory=dict
+    )
 
 
 PHASE2_WORKFLOW_NAME = "Phase 2 - REST API Post Lookup"
@@ -477,7 +481,166 @@ PHASE2_REQUIRED_PARAMETER_IDS = {
 }
 
 
+PHASE3_RETRIEVAL_WORKFLOW_NAME = (
+    "Phase 3 Grounded Engineering Retrieval"
+)
+PHASE3_RETRIEVAL_VERSION_ID = (
+    "d2a2c0a1-1839-46f2-a8d9-ccf4401f4ae9"
+)
+
+PHASE3_RETRIEVAL_REQUIRED_WORKFLOW_FIELDS = frozenset({
+    "active",
+    "connections",
+    "name",
+    "nodeGroups",
+    "nodes",
+    "pinData",
+    "settings",
+    "tags",
+    "versionId",
+})
+
+PHASE3_RETRIEVAL_REQUIRED_WORKFLOW_METADATA_TYPES = {
+    "pinData": dict,
+    "settings": dict,
+    "tags": list,
+    "nodeGroups": list,
+}
+
+PHASE3_RETRIEVAL_REQUIRED_SETTINGS = {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": False,
+}
+
+PHASE3_RETRIEVAL_REQUIRED_NODE_IDS = frozenset({
+    "c23f591d-4292-46e7-b5da-78f8cd5c8087",
+    "f321f0c4-caea-44d6-b254-62db1cbbd79e",
+    "2b26e7ae-4773-49d6-831b-ca0fb5c96fc8",
+    "f9eea0dc-69eb-4ee5-972b-f93efcc939ad",
+    "7e8c2259-261b-451c-9b3d-a39fa33b9516",
+})
+
+PHASE3_RETRIEVAL_REQUIRED_NODE_CONTRACTS = {
+    "c23f591d-4292-46e7-b5da-78f8cd5c8087": (
+        "When clicking ‘Execute workflow’",
+        "n8n-nodes-base.manualTrigger",
+        1,
+    ),
+    "f321f0c4-caea-44d6-b254-62db1cbbd79e": (
+        "Prepare Retrieval Fixture",
+        "n8n-nodes-base.set",
+        3.4,
+    ),
+    "2b26e7ae-4773-49d6-831b-ca0fb5c96fc8": (
+        "Retrieve Evidence Deterministically",
+        "n8n-nodes-base.code",
+        2,
+    ),
+    "f9eea0dc-69eb-4ee5-972b-f93efcc939ad": (
+        "Generate Grounded Answer with OpenAI",
+        "n8n-nodes-base.httpRequest",
+        4.4,
+    ),
+    "7e8c2259-261b-451c-9b3d-a39fa33b9516": (
+        "Validate Grounding Deterministically",
+        "n8n-nodes-base.code",
+        2,
+    ),
+}
+
+PHASE3_RETRIEVAL_REQUIRED_NODE_POSITIONS = {
+    "c23f591d-4292-46e7-b5da-78f8cd5c8087": [-480, -16],
+    "f321f0c4-caea-44d6-b254-62db1cbbd79e": [-272, -16],
+    "2b26e7ae-4773-49d6-831b-ca0fb5c96fc8": [-64, -16],
+    "f9eea0dc-69eb-4ee5-972b-f93efcc939ad": [144, -16],
+    "7e8c2259-261b-451c-9b3d-a39fa33b9516": [352, -16],
+}
+
+PHASE3_RETRIEVAL_REQUIRED_CONNECTIONS = {
+    (
+        "When clicking ‘Execute workflow’",
+        0,
+        "Prepare Retrieval Fixture",
+        0,
+    ),
+    (
+        "Prepare Retrieval Fixture",
+        0,
+        "Retrieve Evidence Deterministically",
+        0,
+    ),
+    (
+        "Retrieve Evidence Deterministically",
+        0,
+        "Generate Grounded Answer with OpenAI",
+        0,
+    ),
+    (
+        "Generate Grounded Answer with OpenAI",
+        0,
+        "Validate Grounding Deterministically",
+        0,
+    ),
+}
+
+PHASE3_RETRIEVAL_REQUIRED_PARAMETER_HASHES = {
+    "c23f591d-4292-46e7-b5da-78f8cd5c8087": (
+        "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+    ),
+    "f321f0c4-caea-44d6-b254-62db1cbbd79e": (
+        "e90f0df6a826fa8b5e7c12967df6a9b9094c8a56bedb3eb409d74b5c8e26175b"
+    ),
+    "2b26e7ae-4773-49d6-831b-ca0fb5c96fc8": (
+        "288757ac915f9110a467d0cb03eae29e9d75a3b22ae5f14cea54255e4487886e"
+    ),
+    "f9eea0dc-69eb-4ee5-972b-f93efcc939ad": (
+        "dbd2ff1a021acf032ff1e2c66a548a7b7af45e5e9f028abbff2d936701822c1b"
+    ),
+    "7e8c2259-261b-451c-9b3d-a39fa33b9516": (
+        "55b6a0b430960820d8952abcabcbf0d1f71206150ca9f2d07727244b8f788ffd"
+    ),
+}
+
+
 WORKFLOW_CONTRACTS = {
+    PHASE3_RETRIEVAL_WORKFLOW_NAME: WorkflowContract(
+        workflow_name=PHASE3_RETRIEVAL_WORKFLOW_NAME,
+        version_id=PHASE3_RETRIEVAL_VERSION_ID,
+        required_workflow_fields=(
+            PHASE3_RETRIEVAL_REQUIRED_WORKFLOW_FIELDS
+        ),
+        required_node_ids=PHASE3_RETRIEVAL_REQUIRED_NODE_IDS,
+        required_node_contracts=(
+            PHASE3_RETRIEVAL_REQUIRED_NODE_CONTRACTS
+        ),
+        required_node_parameters={},
+        required_code_node_parameters={},
+        required_node_positions=(
+            PHASE3_RETRIEVAL_REQUIRED_NODE_POSITIONS
+        ),
+        required_connections=(
+            PHASE3_RETRIEVAL_REQUIRED_CONNECTIONS
+        ),
+        required_branch_assignments={},
+        required_include_other_fields={},
+        required_branch_conditions={},
+        required_condition_options={},
+        required_set_node_options={},
+        required_response_assignments={},
+        required_parameter_ids=set(),
+        required_workflow_metadata_types=(
+            PHASE3_RETRIEVAL_REQUIRED_WORKFLOW_METADATA_TYPES
+        ),
+        required_settings=PHASE3_RETRIEVAL_REQUIRED_SETTINGS,
+        required_active_state=False,
+        required_empty_pin_data=True,
+        required_empty_tags=True,
+        required_empty_node_groups=True,
+        required_node_parameter_hashes=(
+            PHASE3_RETRIEVAL_REQUIRED_PARAMETER_HASHES
+        ),
+    ),
     PHASE2_WORKFLOW_NAME: WorkflowContract(
         workflow_name=PHASE2_WORKFLOW_NAME,
         version_id=PHASE2_VERSION_ID,
@@ -485,6 +648,7 @@ WORKFLOW_CONTRACTS = {
         required_node_ids=PHASE2_REQUIRED_NODE_IDS,
         required_node_contracts=PHASE2_REQUIRED_NODE_CONTRACTS,
         required_node_parameters=PHASE2_REQUIRED_NODE_PARAMETERS,
+        required_node_parameter_hashes={},
         required_code_node_parameters={},
         required_node_positions=PHASE2_REQUIRED_NODE_POSITIONS,
         required_connections=PHASE2_REQUIRED_CONNECTIONS,
@@ -513,6 +677,7 @@ WORKFLOW_CONTRACTS = {
         required_node_ids=frozenset(REQUIRED_NODE_IDS),
         required_node_contracts=REQUIRED_NODE_CONTRACTS,
         required_node_parameters={},
+        required_node_parameter_hashes={},
         required_code_node_parameters=(
             REQUIRED_CODE_NODE_PARAMETERS
         ),
@@ -920,6 +1085,37 @@ def validate_workflow(workflow_path: Path) -> list[str]:
                 f"node parameter contract mismatch for {node_id}: "
                 f"expected {expected_parameters!r}, "
                 f"found {actual_parameters!r}"
+            )
+
+    required_node_parameter_hashes = (
+        contract.required_node_parameter_hashes
+        if contract is not None
+        else {}
+    )
+
+    for node_id in sorted(required_node_parameter_hashes):
+        node = nodes_by_id.get(node_id)
+
+        if node is None:
+            continue
+
+        actual_parameters = node.get("parameters")
+        canonical_parameters = json.dumps(
+            actual_parameters,
+            ensure_ascii=False,
+            separators=(",", ":"),
+            sort_keys=True,
+        ).encode("utf-8")
+        actual_hash = hashlib.sha256(
+            canonical_parameters
+        ).hexdigest()
+        expected_hash = required_node_parameter_hashes[node_id]
+
+        if actual_hash != expected_hash:
+            errors.append(
+                f"node parameter fingerprint mismatch for {node_id}: "
+                f"expected {expected_hash!r}, "
+                f"found {actual_hash!r}"
             )
 
     required_node_positions = (

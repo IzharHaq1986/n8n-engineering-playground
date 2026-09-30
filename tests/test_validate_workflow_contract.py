@@ -23,6 +23,10 @@ WORKFLOW_PATH = (
 PHASE2_WORKFLOW_PATH = (
     REPOSITORY_ROOT / "workflows/phase2/rest-api-post-lookup.json"
 )
+PHASE3_RETRIEVAL_WORKFLOW_PATH = (
+    REPOSITORY_ROOT
+    / "workflows/phase3/grounded-engineering-retrieval.json"
+)
 
 
 def load_validator_module() -> ModuleType:
@@ -104,6 +108,72 @@ class WorkflowContractValidatorTests(unittest.TestCase):
         )
 
         self.assertEqual([], errors)
+
+    def test_phase3_retrieval_workflow_uses_its_contract(
+        self,
+    ) -> None:
+        self.assertTrue(
+            PHASE3_RETRIEVAL_WORKFLOW_PATH.is_file(),
+            "Phase 3 retrieval workflow must exist",
+        )
+
+        workflow = json.loads(
+            PHASE3_RETRIEVAL_WORKFLOW_PATH.read_text(
+                encoding="utf-8"
+            )
+        )
+
+        self.assertEqual(
+            "Phase 3 Grounded Engineering Retrieval",
+            workflow["name"],
+        )
+        self.assertIn(
+            workflow["name"],
+            VALIDATOR.WORKFLOW_CONTRACTS,
+        )
+
+        selected_contract = VALIDATOR.select_workflow_contract(
+            workflow
+        )
+
+        self.assertIs(
+            VALIDATOR.WORKFLOW_CONTRACTS[workflow["name"]],
+            selected_contract,
+        )
+        self.assertEqual(
+            [],
+            VALIDATOR.validate_workflow(
+                PHASE3_RETRIEVAL_WORKFLOW_PATH
+            ),
+        )
+
+    def test_phase3_retrieval_parameter_drift_is_rejected(
+        self,
+    ) -> None:
+        workflow = json.loads(
+            PHASE3_RETRIEVAL_WORKFLOW_PATH.read_text(
+                encoding="utf-8"
+            )
+        )
+
+        generation_node = next(
+            node
+            for node in workflow["nodes"]
+            if node["name"]
+            == "Generate Grounded Answer with OpenAI"
+        )
+        generation_node["parameters"]["jsonBody"] += "\n"
+
+        errors = self.validate_copy(workflow)
+
+        self.assertTrue(
+            any(
+                "node parameter fingerprint mismatch"
+                in error
+                for error in errors
+            ),
+            errors,
+        )
 
     def test_validator_supports_multiple_workflow_contracts(self) -> None:
         self.assertTrue(
