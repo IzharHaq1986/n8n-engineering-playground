@@ -345,6 +345,10 @@ class WorkflowContract:
     required_node_parameter_hashes: dict[str, str] = field(
         default_factory=dict
     )
+    required_node_properties: dict[
+        str,
+        dict[str, Any],
+    ] = field(default_factory=dict)
 
 
 PHASE2_WORKFLOW_NAME = "Phase 2 - REST API Post Lookup"
@@ -603,7 +607,218 @@ PHASE3_RETRIEVAL_REQUIRED_PARAMETER_HASHES = {
 }
 
 
+PHASE6_WORKFLOW_NAME = (
+    "Phase 6 - Read-Only GitHub Issue Reliability Advisor"
+)
+PHASE6_VERSION_ID = (
+    "phase6-readonly-github-issue-reliability-advisor-v1"
+)
+
+PHASE6_REQUIRED_WORKFLOW_FIELDS = frozenset({
+    "active",
+    "connections",
+    "name",
+    "nodeGroups",
+    "nodes",
+    "pinData",
+    "settings",
+    "tags",
+    "versionId",
+})
+
+PHASE6_REQUIRED_WORKFLOW_METADATA_TYPES = {
+    "pinData": dict,
+    "settings": dict,
+    "tags": list,
+    "nodeGroups": list,
+}
+
+PHASE6_REQUIRED_SETTINGS = {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": False,
+}
+
+PHASE6_REQUIRED_NODE_IDS = frozenset({'phase6-build-evidence-rejected-audit-result',
+           'phase6-build-openai-dependency-failure-audit-result',
+           'phase6-build-policy-denied-audit-result',
+           'phase6-build-recommendation-rejected-audit-result',
+           'phase6-build-secret-safe-audit-result',
+           'phase6-enforce-readonly-policy',
+           'phase6-evidence-accepted-for-analysis',
+           'phase6-fetch-allowlisted-github-issue',
+           'phase6-generate-reliability-recommendation',
+           'phase6-manual-trigger',
+           'phase6-normalize-github-evidence',
+           'phase6-policy-allows-github-read',
+           'phase6-prepare-approved-issue-request',
+           'phase6-recommendation-accepted',
+           'phase6-validate-reliability-recommendation'})
+
+PHASE6_REQUIRED_NODE_CONTRACTS = {'phase6-build-evidence-rejected-audit-result': ('Build Evidence-Rejected '
+                                                 'Audit Result',
+                                                 'n8n-nodes-base.code',
+                                                 2),
+ 'phase6-build-openai-dependency-failure-audit-result': ('Build '
+                                                         'OpenAI-Dependency-Failure '
+                                                         'Audit Result',
+                                                         'n8n-nodes-base.code',
+                                                         2),
+ 'phase6-build-policy-denied-audit-result': ('Build Policy-Denied Audit '
+                                             'Result',
+                                             'n8n-nodes-base.code',
+                                             2),
+ 'phase6-build-recommendation-rejected-audit-result': ('Build '
+                                                       'Recommendation-Rejected '
+                                                       'Audit Result',
+                                                       'n8n-nodes-base.code',
+                                                       2),
+ 'phase6-build-secret-safe-audit-result': ('Build Secret-Safe Audit Result',
+                                           'n8n-nodes-base.code',
+                                           2),
+ 'phase6-enforce-readonly-policy': ('Enforce Read-Only Policy',
+                                    'n8n-nodes-base.code',
+                                    2),
+ 'phase6-evidence-accepted-for-analysis': ('Evidence Accepted for Analysis',
+                                           'n8n-nodes-base.if',
+                                           2.3),
+ 'phase6-fetch-allowlisted-github-issue': ('Fetch Allowlisted GitHub Issue',
+                                           'n8n-nodes-base.httpRequest',
+                                           4.4),
+ 'phase6-generate-reliability-recommendation': ('Generate Reliability '
+                                                'Recommendation',
+                                                'n8n-nodes-base.httpRequest',
+                                                4.4),
+ 'phase6-manual-trigger': ('Manual Trigger',
+                           'n8n-nodes-base.manualTrigger',
+                           1),
+ 'phase6-normalize-github-evidence': ('Normalize GitHub Evidence',
+                                      'n8n-nodes-base.code',
+                                      2),
+ 'phase6-policy-allows-github-read': ('Policy Allows GitHub Read',
+                                      'n8n-nodes-base.if',
+                                      2.3),
+ 'phase6-prepare-approved-issue-request': ('Prepare Approved Issue Request',
+                                           'n8n-nodes-base.set',
+                                           3.4),
+ 'phase6-recommendation-accepted': ('Recommendation Accepted',
+                                    'n8n-nodes-base.if',
+                                    2.3),
+ 'phase6-validate-reliability-recommendation': ('Validate Reliability '
+                                                'Recommendation',
+                                                'n8n-nodes-base.code',
+                                                2)}
+
+PHASE6_REQUIRED_NODE_POSITIONS = {'phase6-build-evidence-rejected-audit-result': [-288, -112],
+ 'phase6-build-openai-dependency-failure-audit-result': [-32, -112],
+ 'phase6-build-policy-denied-audit-result': [-912, -80],
+ 'phase6-build-recommendation-rejected-audit-result': [320, -144],
+ 'phase6-build-secret-safe-audit-result': [336, -336],
+ 'phase6-enforce-readonly-policy': [-1328, -176],
+ 'phase6-evidence-accepted-for-analysis': [-496, -272],
+ 'phase6-fetch-allowlisted-github-issue': [-912, -272],
+ 'phase6-generate-reliability-recommendation': [-288, -336],
+ 'phase6-manual-trigger': [-1712, -176],
+ 'phase6-normalize-github-evidence': [-704, -272],
+ 'phase6-policy-allows-github-read': [-1120, -176],
+ 'phase6-prepare-approved-issue-request': [-1504, -176],
+ 'phase6-recommendation-accepted': [112, -320],
+ 'phase6-validate-reliability-recommendation': [-80, -336]}
+
+PHASE6_REQUIRED_CONNECTIONS = {('Enforce Read-Only Policy', 0, 'Policy Allows GitHub Read', 0),
+ ('Evidence Accepted for Analysis',
+  0,
+  'Generate Reliability Recommendation',
+  0),
+ ('Evidence Accepted for Analysis',
+  1,
+  'Build Evidence-Rejected Audit Result',
+  0),
+ ('Fetch Allowlisted GitHub Issue', 0, 'Normalize GitHub Evidence', 0),
+ ('Generate Reliability Recommendation',
+  0,
+  'Validate Reliability Recommendation',
+  0),
+ ('Generate Reliability Recommendation',
+  1,
+  'Build OpenAI-Dependency-Failure Audit Result',
+  0),
+ ('Manual Trigger', 0, 'Prepare Approved Issue Request', 0),
+ ('Normalize GitHub Evidence', 0, 'Evidence Accepted for Analysis', 0),
+ ('Policy Allows GitHub Read', 0, 'Fetch Allowlisted GitHub Issue', 0),
+ ('Policy Allows GitHub Read', 1, 'Build Policy-Denied Audit Result', 0),
+ ('Prepare Approved Issue Request', 0, 'Enforce Read-Only Policy', 0),
+ ('Recommendation Accepted', 0, 'Build Secret-Safe Audit Result', 0),
+ ('Recommendation Accepted',
+  1,
+  'Build Recommendation-Rejected Audit Result',
+  0),
+ ('Validate Reliability Recommendation', 0, 'Recommendation Accepted', 0)}
+
+PHASE6_REQUIRED_PARAMETER_HASHES = {'phase6-build-evidence-rejected-audit-result': '2b17ac0ed6fb4c8204f04a8e2cb0685b43364ab14c4b7a4617ebc40299bc45d0',
+ 'phase6-build-openai-dependency-failure-audit-result': '2da44f2e9dfd08d8ac4dfbe380cac129e186c85a243c476b400e2ece576462d7',
+ 'phase6-build-policy-denied-audit-result': '2b8b815fcc456b792d1172651f3a0e559435a34aa8356ecbfbecfd40115ecdc0',
+ 'phase6-build-recommendation-rejected-audit-result': '9c59510c04a25cde06627621790bfb7f7683d8fa8c94df0181e23032e8ae161c',
+ 'phase6-build-secret-safe-audit-result': 'eeac5adbc1d2e3a584d3951b80be1c2689cb995ce761d837c8737cfe8316e6c8',
+ 'phase6-enforce-readonly-policy': 'ee6bcc7cbcb9d7996228bf64d2d9b6afc9191e09b945c54858828402602bb53d',
+ 'phase6-evidence-accepted-for-analysis': '857441103ff4a49a1b123682f609f1f9a58b36f5e2baba47db24120ec84a9e32',
+ 'phase6-fetch-allowlisted-github-issue': '34da92f728eea51c917e57e29b00ff6a6785f3c7dca66bd5c995b51d13a3506d',
+ 'phase6-generate-reliability-recommendation': '8a7315fd5985ade5a214f7ac3d3722b2cce0e8fa4a55e7c2cb2f9fa1a60540f7',
+ 'phase6-manual-trigger': '44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a',
+ 'phase6-normalize-github-evidence': '3e735771a66101a1e67ef195437746276ab9ed2256efe787629ccc0769eb525e',
+ 'phase6-policy-allows-github-read': '95a8f968e6771ede74c4740f8c02af1495d6c98ea8dc3a88c329eda7fb13b6fe',
+ 'phase6-prepare-approved-issue-request': '2aef5c249734c1fa5a02d4ded733292487d1b04864a72a3c96c1857e130a9fb1',
+ 'phase6-recommendation-accepted': 'b29d6c056e2029beeb9ea56bcea1eeb8f1ac185faa877bac03c0810b79e7466f',
+ 'phase6-validate-reliability-recommendation': 'd331e325a66eb44211a7dedfb49e18d2f4396fcb6eadf3e2c0c4d2ebc690356f'}
+
+PHASE6_REQUIRED_PARAMETER_IDS = {'phase6-evidence-accepted-condition',
+ 'phase6-policy-allows-read-condition',
+ 'phase6-recommendation-accepted-condition'}
+
+PHASE6_REQUIRED_NODE_PROPERTIES = {'phase6-generate-reliability-recommendation': {'onError': 'continueErrorOutput'}}
+
+
 WORKFLOW_CONTRACTS = {
+    PHASE6_WORKFLOW_NAME: WorkflowContract(
+        workflow_name=PHASE6_WORKFLOW_NAME,
+        version_id=PHASE6_VERSION_ID,
+        required_workflow_fields=(
+            PHASE6_REQUIRED_WORKFLOW_FIELDS
+        ),
+        required_node_ids=PHASE6_REQUIRED_NODE_IDS,
+        required_node_contracts=(
+            PHASE6_REQUIRED_NODE_CONTRACTS
+        ),
+        required_node_parameters={},
+        required_code_node_parameters={},
+        required_node_positions=(
+            PHASE6_REQUIRED_NODE_POSITIONS
+        ),
+        required_connections=PHASE6_REQUIRED_CONNECTIONS,
+        required_branch_assignments={},
+        required_include_other_fields={},
+        required_branch_conditions={},
+        required_condition_options={},
+        required_set_node_options={},
+        required_response_assignments={},
+        required_parameter_ids=(
+            PHASE6_REQUIRED_PARAMETER_IDS
+        ),
+        required_workflow_metadata_types=(
+            PHASE6_REQUIRED_WORKFLOW_METADATA_TYPES
+        ),
+        required_settings=PHASE6_REQUIRED_SETTINGS,
+        required_active_state=False,
+        required_empty_pin_data=True,
+        required_empty_tags=True,
+        required_empty_node_groups=True,
+        required_node_parameter_hashes=(
+            PHASE6_REQUIRED_PARAMETER_HASHES
+        ),
+        required_node_properties=(
+            PHASE6_REQUIRED_NODE_PROPERTIES
+        ),
+    ),
     PHASE3_RETRIEVAL_WORKFLOW_NAME: WorkflowContract(
         workflow_name=PHASE3_RETRIEVAL_WORKFLOW_NAME,
         version_id=PHASE3_RETRIEVAL_VERSION_ID,
@@ -1117,6 +1332,32 @@ def validate_workflow(workflow_path: Path) -> list[str]:
                 f"expected {expected_hash!r}, "
                 f"found {actual_hash!r}"
             )
+
+    required_node_properties = (
+        contract.required_node_properties
+        if contract is not None
+        else {}
+    )
+
+    for node_id in sorted(required_node_properties):
+        node = nodes_by_id.get(node_id)
+
+        if node is None:
+            continue
+
+        expected_properties = required_node_properties[node_id]
+
+        for property_name in sorted(expected_properties):
+            expected_value = expected_properties[property_name]
+            actual_value = node.get(property_name)
+
+            if actual_value != expected_value:
+                errors.append(
+                    "node property mismatch for "
+                    f"{node_id}.{property_name}: "
+                    f"expected {expected_value!r}, "
+                    f"found {actual_value!r}"
+                )
 
     required_node_positions = (
         contract.required_node_positions
