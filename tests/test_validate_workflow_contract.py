@@ -27,6 +27,11 @@ PHASE3_RETRIEVAL_WORKFLOW_PATH = (
     REPOSITORY_ROOT
     / "workflows/phase3/grounded-engineering-retrieval.json"
 )
+PHASE6_WORKFLOW_PATH = (
+    REPOSITORY_ROOT
+    / "workflows/phase6/"
+    "readonly-github-issue-reliability-advisor.json"
+)
 
 
 def load_validator_module() -> ModuleType:
@@ -172,6 +177,89 @@ class WorkflowContractValidatorTests(unittest.TestCase):
                 in error
                 for error in errors
             ),
+            errors,
+        )
+
+    def test_phase6_repository_workflow_uses_its_contract(
+        self,
+    ) -> None:
+        self.assertTrue(
+            PHASE6_WORKFLOW_PATH.is_file(),
+            "Phase 6 repository workflow must exist",
+        )
+
+        workflow = json.loads(
+            PHASE6_WORKFLOW_PATH.read_text(encoding="utf-8")
+        )
+
+        self.assertEqual(
+            "Phase 6 - Read-Only GitHub Issue Reliability Advisor",
+            workflow["name"],
+        )
+        self.assertIn(
+            workflow["name"],
+            VALIDATOR.WORKFLOW_CONTRACTS,
+        )
+
+        selected_contract = VALIDATOR.select_workflow_contract(
+            workflow
+        )
+
+        self.assertIs(
+            VALIDATOR.WORKFLOW_CONTRACTS[workflow["name"]],
+            selected_contract,
+        )
+        self.assertEqual(
+            [],
+            VALIDATOR.validate_workflow(PHASE6_WORKFLOW_PATH),
+        )
+
+    def test_phase6_parameter_drift_is_rejected(self) -> None:
+        workflow = json.loads(
+            PHASE6_WORKFLOW_PATH.read_text(encoding="utf-8")
+        )
+
+        generation_node = next(
+            node
+            for node in workflow["nodes"]
+            if node["name"]
+            == "Generate Reliability Recommendation"
+        )
+        generation_node["parameters"]["jsonBody"] += "\n"
+
+        errors = self.validate_copy(workflow)
+
+        self.assertTrue(
+            any(
+                "node parameter fingerprint mismatch"
+                in error
+                for error in errors
+            ),
+            errors,
+        )
+
+    def test_phase6_error_routing_drift_is_rejected(
+        self,
+    ) -> None:
+        workflow = json.loads(
+            PHASE6_WORKFLOW_PATH.read_text(encoding="utf-8")
+        )
+
+        generation_node = next(
+            node
+            for node in workflow["nodes"]
+            if node["name"]
+            == "Generate Reliability Recommendation"
+        )
+        generation_node["onError"] = "stopWorkflow"
+
+        errors = self.validate_copy(workflow)
+
+        self.assertIn(
+            "node property mismatch for "
+            "phase6-generate-reliability-recommendation.onError: "
+            "expected 'continueErrorOutput', "
+            "found 'stopWorkflow'",
             errors,
         )
 
